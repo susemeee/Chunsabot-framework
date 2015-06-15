@@ -95,16 +95,23 @@ class Database(dict):
         return self.save(key, value)
 
     def count(self):
-        Database.c.execute("SELECT COUNT(*) FROM msg_map")
+        Database.c.execute("SELECT COUNT(*) FROM `{0}`".format(self.name))
         return Database.c.fetchone()[0]
+
+    def list_all(self, room=None):
+        assert(type(room) is int)
+
+        Database.c.execute("SELECT * FROM `{0}` WHERE room_id='{1}'".format(self.name, room))
+
+        row_array = Database.c.fetchall()
+
+        return [r[0] for r in row_array].__repr__()
+
 
     def save(self, key, value, room=None):
         key = key.replace("'", "''")
         value = value.replace("'", "''")
-        # try:
-        #     self.load(key)
-        #     Database.c.execute(DB_Update_query.format(self.name, key, value))
-        # except KeyError:
+        assert(type(room) is int)
         
         #accepts duplicate value
         if room:
@@ -117,6 +124,7 @@ class Database(dict):
 
     def load(self, key, room=None, strict=False):  
         key = key.replace("'", "''")
+        assert(type(room) is int)
 
         if not room:
             Database.c.execute(DB_Select_query.format(self.name, key))

@@ -32,6 +32,32 @@ def delete_msg(msg, extras=None):
     else:
         return u"[지우기]\r\n이 방에서 그런 단어는 배우지 않았습니다!"
 
+@brain.route(u"짤리스트")
+def image_list(msg, extras):
+    room = extras['room']
+    if room.is_personal():
+        return u"[짤리스트]\r\n이 기능은 개인 대화에서 작동하지 않습니다."
+
+    return u"[짤리스트]\r\n{0}".format(learn.list_image(extras['room_id']))
+
+
+@brain.startswith(u"짤지우기", disable_when_silence=True)
+def image_list(msg, extras):
+    if not msg:
+        return info_delete_image()
+
+    room = extras['room']
+    if room.is_personal():
+        return u"[짤지우기]\r\n이 기능은 개인 대화에서 작동하지 않습니다."
+
+    if msg:
+        room_id = extras['room_id']
+        row_match = learn.image_map.delete(msg, room_id)
+        if row_match > 0:
+            return u"[짤지우기]\r\n{0}개의 단어를 삭제하였습니다!".format(row_match)
+        else:
+            return u"[짤지우기]\r\n이 방에서 그런 단어는 배우지 않았습니다!"
+
 
 @brain.startswith(u"짤배우기", disable_when_silence=True)
 def process_image(msg, extras):
@@ -193,6 +219,11 @@ def info_delete():
 같은 방에서 배운 단어에 한해 배우기한 단어를    지울 수 있습니다. 
 예) 친구가 내 이름에 병신이라고 등록해놨을 때 : 
 .지우기 내이름"""
+
+def info_delete_image():
+    return u"""[짤지우기]
+해당 방에서 배운 이미지를 삭제합니다.
+"""
 
 #@brain.route(u"배우기")
 def info():

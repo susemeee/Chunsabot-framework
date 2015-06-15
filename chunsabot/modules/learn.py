@@ -92,9 +92,11 @@ class Learnlogic:
         else:
             return False
 
+    def list_image(self, room_id):
+        return self.image_map.list_all(room_id)
+
     def delete_image(self, key):
         self.image_map.delete(key)
-
 
     def save_image(self, image_url, extras):
         # image_url = '/'+image_url.split('/', 3)[3]
