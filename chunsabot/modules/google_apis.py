@@ -73,6 +73,9 @@ def random_image(msg, extras):
         return random_image_info()
 
     data = _get_data(GOOGLE_IMG_SEARCH_RESULT, GOOGLE_IMG_SEARCH_URL.format(quote(msg)), msg)
+
+    if isinstance(data, ResultMessage):
+        return data
     
     data = json.loads(data) 
     results = data["responseData"]["results"]
@@ -87,6 +90,9 @@ def random_youtube(msg, extras):
 
     data = _get_data(GOOGLE_Y_SEARCH_RESULT, GOOGLE_Y_SEARCH_URL.format(quote(msg), API_KEY), msg)
 
+    if isinstance(data, ResultMessage):
+        return data
+        
     data = json.loads(data)
 
     results = data["items"]
