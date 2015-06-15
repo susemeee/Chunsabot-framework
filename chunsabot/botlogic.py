@@ -41,6 +41,7 @@ class Botlogic:
     __version__ = "20150614"
     __intversion__ = "1.0.0"
     __roompath__ = "data/room_saved"
+    __temppath__ = "data/temp/"
     __leave__ = Database.load_config("leave")
 
     @staticmethod
@@ -52,6 +53,7 @@ class Botlogic:
         assert(not initialized_once)
 
         brain = self
+        self.cache = {}
         self.sockets = _sockets
         self.debug = debug
         self.logger = Logger.mainLogger()
@@ -66,8 +68,14 @@ class Botlogic:
 
         if real_path:
             Botlogic.__roompath__ = os.path.join(real_path, Botlogic.__roompath__)
+            Botlogic.__temppath__ = os.path.join(real_path, Botlogic.__temppath__)
         else:
             Botlogic.__roompath__ = os.path.join(os.getcwd(), Botlogic.__roompath__)
+            Botlogic.__temppath__ = os.path.join(os.getcwd(), Botlogic.__temppath__)
+
+        if not os.path.isdir(Botlogic.__temppath__):
+            self.logger.info("Created Temp directory")
+            os.makedirs(Botlogic.__temppath__)
 
         self.rooms = Database.load_object(Botlogic.__roompath__, 'rooms') or {}
 

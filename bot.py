@@ -75,9 +75,9 @@ else:
     def empty_cb(success):
         pass
 
-    def msg_cb(success, msg):
-        pass
-
+    def msg_cb(success, msg, by=None):
+        if by == "photo":
+            ch.remove_temp_dir()
 
     def file_cb(success, file_path, peer=None, msg=None):
         r = ch.process_msg(_make_message(msg, peer, msg.src, attachment=file_path))
@@ -119,7 +119,7 @@ else:
                     if r.content_type == ContentType.Text:
                         peer.send_msg(r.content)
                     elif r.content_type == ContentType.Image:
-                        peer.send_photo(r.content)
+                        peer.send_photo(r.content, lambda success, msg : msg_cb(success, msg, by="photo"))
 
 
         except Exception as e:

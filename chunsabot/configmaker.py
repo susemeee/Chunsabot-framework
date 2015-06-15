@@ -26,6 +26,7 @@ def make_initial_config():
         Database.save_config('debug_allowed_room', [])
         Database.save_config('debug_users', [])
         Database.save_config('debug_mode', False)    
+        Database.save_config('google_api_key', '')    
         Database.save_config('weather_url_all', 'http://www.kma.go.kr/weather/forecast/mid-term-rss3.jsp')
 
         print("Config sucessfully saved.")

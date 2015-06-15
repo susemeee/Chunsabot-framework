@@ -176,9 +176,9 @@ def learn_emotion(emotion, word, extras):
         .replace(u"[EMOTION]", emotion)
         return res
 
-    if not emotion in emotions:
-        return info()
-        
+    if not word or not emotion in emotions:
+        return _inner_info_emotion()
+
     learn.emotion_map[word] = emotion
     return emotion_reply(word, emotion)
 
@@ -193,13 +193,16 @@ def pm():
 
 .배우기 관련 내용에 대하여 불쾌하거나 불만사항이 있으신 경우, 메일을 통하여 알려주시면 감사하겠습니다."""
 
-@brain.route(u"감정", no_params=True)
-def info_emotion():
+def _inner_info_emotion():
     return u"""[감정]
 로봇에게 감정을 가르칠 수 있습니다! 
 예) .좋아요 고려대
 {0}
 감정에 대한 정보는 추후 업데이트에서 사용될 수 있습니다.""".format(u" ".join(emotions))
+
+@brain.route(u"감정", no_params=True)
+def info_emotion():
+    return _inner_info_emotion()
 
 # @brain.route(u"짤배우기")
 def info_image():

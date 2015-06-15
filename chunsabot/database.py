@@ -116,7 +116,7 @@ class Database(dict):
     def save(self, key, value, room=None):
         key = key.replace("'", "''")
         value = value.replace("'", "''")
-        assert(type(room) is int)
+        assert(type(room) is int or room is None)
         
         #accepts duplicate value
         if room:
@@ -129,7 +129,7 @@ class Database(dict):
 
     def load(self, key, room=None, strict=False):  
         key = key.replace("'", "''")
-        assert(type(room) is int)
+        assert(type(room) is int or room is None)
 
         if not room:
             Database.c.execute(DB_Select_query.format(self.name, key))

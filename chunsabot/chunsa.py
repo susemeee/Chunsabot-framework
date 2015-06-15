@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import time
+import os
 from datetime import datetime
 
 from chunsabot.messages import Message, ResultMessage, ContentType
@@ -79,6 +80,12 @@ class Chunsa:
                 import traceback
                 traceback.print_exc()
 
+    def remove_temp_dir(self):
+        for the_file in os.listdir(Botlogic.__temppath__):
+            file_path = os.path.join(Botlogic.__temppath__, the_file)
+            if os.path.isfile(file_path):
+                os.unlink(file_path)
+        
 
     def image_ready(self, room_id, user_id):
         return self.brain.image_ready(room_id, user_id)
