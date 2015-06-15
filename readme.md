@@ -157,6 +157,14 @@ Remark
 | attachment | dict    | Contains non-message matters. (Image, emoticon etc) |
 
 
+Support
+-------
+
+Send me a Telegram message (@susemeee) if you need any support.
+
+If you think you have found a bug, have an idea or suggestion, please open a issue here.
+
+
 Changelog
 ---------
 this changelog has been written before the git commit.
