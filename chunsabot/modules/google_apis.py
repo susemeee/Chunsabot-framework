@@ -22,9 +22,9 @@ def _hash(url):
     return "{0}".format(hashlib.sha256(url.encode('utf-8')).hexdigest()[:16])
 
 def _send_photos_from_url(url):
-    print(url)
+    # print(url)
     path = os.path.join(Botlogic.__temppath__, _hash(url))
-    print(path)
+    # print(path)
 
     if not os.path.exists(path):
         r = requests.get(url)
@@ -50,7 +50,7 @@ def _get_data(cache_name, search_url, msg):
         data = requests.get(search_url)
 
         if data.status_code != 200:
-            return ResultMessage("이미지 검색 오류 ({0})".format(data.status_code))
+            return ResultMessage("검색 오류 ({0})".format(data.status_code))
         else:
             cache[msg] = data.text
             return data.text
