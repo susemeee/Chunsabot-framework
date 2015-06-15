@@ -15,7 +15,7 @@ API_KEY = Database.load_config("google_api_key")
 GOOGLE_Y_SEARCH_RESULT = "GoogleYouTube"
 GOOGLE_Y_SEARCH_URL = "https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=8&type=video&q={0}&key={1}"
 GOOGLE_IMG_SEARCH_RESULT = "GoogleImage"
-GOOGLE_IMG_SEARCH_URL = "http://ajax.googleapis.com/ajax/services/search/images?v=1.0&rsz=5&q={0}&imgsz=small|medium|large"
+GOOGLE_IMG_SEARCH_URL = "http://ajax.googleapis.com/ajax/services/search/images?v=1.0&rsz=5&q={0}&imgsz=small|medium|large&key={1}"
 
 
 def _hash(url):
@@ -72,7 +72,7 @@ def random_image(msg, extras):
     if not msg:
         return random_image_info()
 
-    data = _get_data(GOOGLE_IMG_SEARCH_RESULT, GOOGLE_IMG_SEARCH_URL.format(quote(msg)), msg)
+    data = _get_data(GOOGLE_IMG_SEARCH_RESULT, GOOGLE_IMG_SEARCH_URL.format(quote(msg), API_KEY), msg)
 
     if isinstance(data, ResultMessage):
         return data
@@ -92,7 +92,7 @@ def random_youtube(msg, extras):
 
     if isinstance(data, ResultMessage):
         return data
-        
+
     data = json.loads(data)
 
     results = data["items"]
