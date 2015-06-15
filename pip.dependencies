@@ -1,0 +1,6 @@
+#pip install -r pip.dependencies
+
+beautifulsoup4
+pyYAML
+requests
+
