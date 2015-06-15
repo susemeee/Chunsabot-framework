@@ -2,7 +2,12 @@
 import os
 import random
 import time
-import yaml
+try:
+    import yaml
+except ImportError:
+    print("please install dependencies via lauching \"pip3 install -r pip.dependencies\" before launch.")
+    exit(1)
+
 import sqlite3
 try:
     import cPickle as pickle
