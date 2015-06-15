@@ -63,7 +63,8 @@ else:
             user_name=_by.name.replace("_", " "), 
             text=msg.text, 
             datetime=msg.date,
-            attachment=attachment)
+            attachment=attachment,
+            peer=peer)
 
     def _on_close():
         print("closing")
@@ -76,6 +77,7 @@ else:
 
     def msg_cb(success, msg):
         pass
+
 
     def file_cb(success, file_path, peer=None, msg=None):
         r = ch.process_msg(_make_message(msg, peer, msg.src, attachment=file_path))
@@ -111,9 +113,9 @@ else:
                 if ch.image_ready(peer.id, _by.id):
                     msg.load_photo(lambda success, file_path: file_cb(success, file_path, peer=peer, msg=msg))
             else:            
-                peer.mark_read(empty_cb)
                 r = ch.process_msg(_make_message(msg, peer, _by))
                 if r:
+                    peer.mark_read(empty_cb)
                     if r.content_type == ContentType.Text:
                         peer.send_msg(r.content)
                     elif r.content_type == ContentType.Image:
@@ -141,4 +143,3 @@ else:
     tgl.set_on_secret_chat_update(on_secret_chat_update)
     tgl.set_on_user_update(on_user_update)
     tgl.set_on_chat_update(on_chat_update)
-    print("asdf")

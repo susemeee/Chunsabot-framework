@@ -26,15 +26,17 @@ class Chunsa:
 
 
     def __init__(self, real_path=None, profiling=False, check_warning=True, sync=False):
-        self.logger = Logger.mainLogger()
+        self.debug_users = Database.load_config("debug_users")
+        self.debug_mode = Database.load_config("debug_mode")
+        self.debug_allowed_room = Database.load_config("debug_allowed_room")
 
+        Logger.init(starttime(), store_file=self.debug_mode, store_alt_file=False, real_path=real_path)
+
+        self.logger = Logger.mainLogger()
         #logger used to log currently connected all rooms
         #serves for research purposes.
         self.room_logger = Logger.altLogger()
 
-        self.debug_users = Database.load_config("debug_users")
-        self.debug_mode = Database.load_config("debug_mode")
-        self.debug_allowed_room = Database.load_config("debug_allowed_room")
 
         #'Shutdown' and 'Shutdown_socket' should be separated since some thread inside botlogic refers Chunsa.shutdown
         self.shutdown = False
@@ -81,6 +83,9 @@ class Chunsa:
     def image_ready(self, room_id, user_id):
         return self.brain.image_ready(room_id, user_id)
 
+    def add_result_msg(self, msg):
+        self.msg_result_queue.put(msg)
+
     def add_msg(self, msg):
         self.msg_queue.put(msg)
 
@@ -113,15 +118,15 @@ class Chunsa:
             self.m_count = 0
             time.sleep(1)
 
-    def init_process(self, ensure_outgoing, real_path, profiling=False):
+    def init_process(self):
         if not self.th_profile and not profiling and not self.debug_mode:
             # self.th_profile = Thread(target=self.async_status)  
             # self.th_profile.start()
             pass
         if not self.th_process_pool:
-            self.th_process_pool = Process(target=self.process_msg_async, args=(ensure_outgoing, real_path, ))
+            self.th_process_pool = Process(target=self.process_msg_async, args=())
 
-    def start_async(self, real_path=None, ensure_outgoing=False, self_reconn=False):
+    def start_async(self, self_reconn=False):
         if self.debug_mode or not self.check_warning:
             timeout = False
         else:
@@ -129,7 +134,7 @@ class Chunsa:
 
         if not self_reconn:      
             #count thread start
-            self.init_process(ensure_outgoing, real_path, profiling)
+            self.init_process()
             #msg process start
             self.th_process_pool.start()
 
@@ -151,6 +156,13 @@ class Chunsa:
     def process_msg(self, msg):
         assert(self.sync == True)
         assert(Database.connected and self.brain is not None)
+
+        # processing async-generated messages
+        # NOT YET TESTED
+        # while not self.msg_result_queue.empty():
+        #     message = self.msg_result_queue.get()
+        #     self.write(message)
+
         return self.inner_process(msg)
 
     def process_msg_async(self):
@@ -181,13 +193,9 @@ class Chunsa:
             attachment = False
 
             if not self.profiling and self.debug_mode:
-                try:
-                    room = u"@"+room_map[str(room_id)]
-                except KeyError:
-                    room = u"@"+unicode(room_id)
                 #log if debug mode
                 try:
-                    p = u"{0}{1}: {2}".format(msg.user_name, room, msg.text)
+                    p = u"{0}@{1}: {2}".format(msg.user_name, room_id, msg.text)
                     self.logger.info(p)
                 except UnicodeEncodeError:
                     pass
@@ -215,7 +223,7 @@ class Chunsa:
                 #[NAME] keyword conversion
                 if resp.content_type == ContentType.Text:
                     resp.content = resp.content.replace(u"[NAME]", msg.user_name)
-
+                
                 # exit before sync process returning
                 if resp.content_type == ContentType.Exit:
                     if self.sync:

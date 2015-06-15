@@ -178,8 +178,6 @@ class Botlogic:
             self.sockets.profiling = True
             import pdb
             pdb.set_trace()
-        elif msg.startswith(u"@ChangeConfig"):
-            pass
         elif msg.startswith(u"@Setcurse"):
             msg = msg.split(' ', 1)[1]
             if not msg:
@@ -206,12 +204,22 @@ class Botlogic:
         elif msg == u"@CurrentRoom":
             return u"{0}".format(extras["room_id"])
         elif msg == u"@PI":
-            from lib.pi import PI
+            from chunsabot.pi import PI
             t = time.time()
             result = PI.calculate()
             return unicode(result)+u"\r\nTook {0} ms".format((time.time() - t)*1000)
-        elif msg == u"@Lock":
-            return self.silence("조용히해 취소", room_id, 0, "영구", override=True)
+        elif msg == u"@Asynctest":
+            import time
+
+            def process():
+                time.sleep(3)
+                self.sockets.write(ResultMessage("asdf", peer=extras['peer']))
+                # self.sockets.add_result_msg(ResultMessage("asdf", peer=extras['peer']))
+
+            from threading import Thread
+            p = Thread(target=process)
+            p.start()
+
         #Image upload debugging function   
         # elif msg.startswith(u"@IUT") or msg.startswith(u"@IUT_r"):
         #     try:
@@ -289,7 +297,8 @@ class Botlogic:
             "room" : self.rooms[room_id], 
             "user_id" : user_id,
             "room_id" : room_id,
-            "user_name" : extras.user_name
+            "user_name" : extras.user_name,
+            "peer" : extras.peer
         }
         
         if msg.startswith(u"@") and user_id in self.sockets.debug_users:
