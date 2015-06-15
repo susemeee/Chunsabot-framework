@@ -65,9 +65,11 @@ class Botlogic:
         self.update_ready = False
 
         if real_path:
-            self.rooms = Database.load_object(os.path.join(real_path, Botlogic.__roompath__), 'rooms') or {}
+            Botlogic.__roompath__ = os.path.join(real_path, Botlogic.__roompath__)
         else:
-            self.rooms = Database.load_object(os.path.join(os.getcwd(), Botlogic.__roompath__), 'rooms') or {}
+            Botlogic.__roompath__ = os.path.join(os.getcwd(), Botlogic.__roompath__)
+
+        self.rooms = Database.load_object(Botlogic.__roompath__, 'rooms') or {}
 
         self.load_all_modules(real_path=real_path)
         initialized_once = True
@@ -200,7 +202,7 @@ class Botlogic:
         elif msg == u"@QSize":
             return u"{0}".format(self.sockets.queue_size())
         elif msg == u"@Exitexit":
-            self.sockets.close_all_thread()
+            return ResultMessage("", content_type=ContentType.Exit)
         elif msg == u"@CurrentRoom":
             return u"{0}".format(extras["room_id"])
         elif msg == u"@PI":

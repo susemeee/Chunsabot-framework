@@ -173,7 +173,7 @@ class Database(dict):
     @staticmethod
     def load_object(path, name=''):
         try:
-            cp = file(path, 'r').read()
+            cp = open(path, 'rb').read()
             cp = pickle.loads(cp)
             print("{0} loaded from saved file".format(name))
             return cp
@@ -183,10 +183,10 @@ class Database(dict):
 
     @staticmethod
     def save_object(path, object):
-        cp = file(path, 'w')
-        cp.write(pickle.dumps(object))
-        cp.flush()
-        cp.close()
+        with open(path, 'wb') as cp:
+            cp.write(pickle.dumps(object))
+            cp.flush()
+            cp.close()
 
 class Cache:
     c = {}

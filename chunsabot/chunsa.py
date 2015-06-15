@@ -13,7 +13,7 @@ from threading import Thread
 from multiprocessing import Queue
 from multiprocessing import Process
 
-def default_func(msg):
+def default_func(msg=None):
     print("Function not assigned. Please call set_func before async running.")
 
 class Chunsa:
@@ -65,6 +65,7 @@ class Chunsa:
         self.write = default_func
         self.leave = default_func
         self.write_image = default_func
+        self.on_close = default_func
 
         if not Database.connected and not self.brain:
             Database.init_connection(real_path)
@@ -76,9 +77,6 @@ class Chunsa:
                 import traceback
                 traceback.print_exc()
 
-    def __del__(self):
-        if self.sync:
-            self.close_sync_process()
 
     def image_ready(self, room_id, user_id):
         return self.brain.image_ready(room_id, user_id)
@@ -142,23 +140,27 @@ class Chunsa:
     def close_sync_process(self):
         self.logger.info("Closing process thread")
         self.brain.save_rooms()
+        self.on_close()
 
     def close_async_process(self):
         self.msg_queue.put(self.msg_queue_Shutdown)
         self.shutdown = True
         self.shutdown_socket = True
+        self.on_close()
 
     def process_msg(self, msg):
+        assert(self.sync == True)
         assert(Database.connected and self.brain is not None)
-        return self.inner_process(msg, sync=True)
+        return self.inner_process(msg)
 
     def process_msg_async(self):
+        assert(self.sync == False)
         assert(Database.connected and self.brain is not None)
 
         # Message instance
         for msg in iter(self.msg_queue.get, self.msg_queue_Shutdown):
             try:
-                self.inner_process(msg, sync=False)
+                self.inner_process(msg)
             except Exception as e:
                 self.logger.exception("Process : Something awful happened!")
 
@@ -166,7 +168,7 @@ class Chunsa:
         brain.save_rooms()
 
 
-    def inner_process(self, msg, sync=False):
+    def inner_process(self, msg):
         brain = self.brain
         room_id = msg.room_id
 
@@ -214,12 +216,19 @@ class Chunsa:
                 if resp.content_type == ContentType.Text:
                     resp.content = resp.content.replace(u"[NAME]", msg.user_name)
 
-                if sync:
+                # exit before sync process returning
+                if resp.content_type == ContentType.Exit:
+                    if self.sync:
+                        self.close_sync_process()
+                    else:
+                        self.close_async_process()
+
+                if self.sync:
                     return resp
                 else:
                     self.write(resp)
 
-                if resp.content_type == ContentType.leave:
+                if resp.content_type == ContentType.Leave:
                     self.leave(room_id)
 
         elif self.debug_mode and room_id not in self.debug_allowed_room:

@@ -4,6 +4,7 @@ class ContentType(Enum):
     Text = 100
     Image = 101
     Leave = 199
+    Exit = 999
 
 class Message:
     def __init__(self, room_id, user_id, user_name, text, datetime, peer=None, attachment=None):
