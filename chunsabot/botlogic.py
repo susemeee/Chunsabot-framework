@@ -273,8 +273,9 @@ class Botlogic:
             room.members.append(user_id)
 
         # toUpperCase required
-        if VerifyUrl.url_only_re.match(msg.text.upper()):
-            VerifyUrl.async_verify_url(self.sockets, msg.text, room_id)
+        # VerifyUrl deprecated
+        # if VerifyUrl.url_only_re.match(msg.text.upper()):
+        #     VerifyUrl.async_verify_url(self.sockets, msg.text, room_id)
 
   
     def translate_attachment(self, msg):
