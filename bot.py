@@ -70,6 +70,10 @@ else:
         print("closing")
         tgl.safe_exit(0)
 
+    def _cwrite(peer_list, name=""):
+        tgl.create_group_chat(peer_list, name)
+
+    ch.cwrite = _cwrite
     ch.on_close = _on_close
 
     def empty_cb(success):
