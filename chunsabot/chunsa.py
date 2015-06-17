@@ -8,23 +8,19 @@ from chunsabot.logger import Logger
 from chunsabot.database import Database
 from chunsabot.botlogic import Botlogic
 
-#async_status
+# async_status
 from threading import Thread
-#th_process_msg
-from multiprocessing import Queue
+from queue import Queue
+# th_process_msg
+# "Multiprocessing" module not suitable for telegram async message sending...
+from multiprocessing import Queue as MultiQueue
 from multiprocessing import Process
 
-def default_func(msg=None):
+def default_func(*args, **kwargs):
     print("Function not assigned. Please call set_func before async running.")
 
 class Chunsa:
     __leave__ = Database.load_config("leave")
-
-    def set_func(self, write, write_image, leave):
-        self.write = write
-        self.write_image = write_image
-        self.leave = leave
-
 
     def __init__(self, real_path=None, profiling=False, check_warning=True, sync=False):
         self.debug_users = Database.load_config("debug_users")
@@ -47,10 +43,14 @@ class Chunsa:
         self.sync = sync
 
         self.th_profile = None    
-        self.th_process_pool = None
 
-        self.msg_queue = Queue()
-        self.msg_result_queue = Queue()
+        if not sync:
+            self.th_process_pool = None
+            self.msg_queue = MultiQueue()
+            self.msg_result_queue = MultiQueue()
+        else:
+            self.msg_result_queue = Queue()
+
         self.msg_queue_Shutdown = 'Shutdown'
         self.lock = False
 
@@ -65,7 +65,7 @@ class Chunsa:
         self.init_time = None
 
         # functions
-        self.write = default_func
+        self.cwrite = default_func
         self.leave = default_func
         self.write_image = default_func
         self.on_close = default_func
@@ -85,16 +85,18 @@ class Chunsa:
             file_path = os.path.join(Botlogic.__temppath__, the_file)
             if os.path.isfile(file_path):
                 os.unlink(file_path)
-        
-
+    
     def image_ready(self, room_id, user_id):
         return self.brain.image_ready(room_id, user_id)
 
+
+    def write(self, msg, peer):
+        if type(msg) is str:
+            msg = ResultMessage(msg, peer=peer)
+        self.add_result_msg(msg)
+
     def add_result_msg(self, msg):
         self.msg_result_queue.put(msg)
-
-    def add_msg(self, msg):
-        self.msg_queue.put(msg)
 
     def queue_size(self):
         try:
@@ -105,7 +107,6 @@ class Chunsa:
 
     def async_status(self):
         while not self.shutdown and not self.profiling and not self.shutdown_socket:
-          #selfheal logic
             if not self.debug_mode and self.check_warning:
                 if self.p_count == 0:
                     self.warning_trans += 1
@@ -127,8 +128,8 @@ class Chunsa:
 
     def init_process(self):
         if not self.th_profile and not profiling and not self.debug_mode:
-            # self.th_profile = Thread(target=self.async_status)  
-            # self.th_profile.start()
+            self.th_profile = Thread(target=self.async_status)  
+            self.th_profile.start()
             pass
         if not self.th_process_pool:
             self.th_process_pool = Process(target=self.process_msg_async, args=())
@@ -163,13 +164,6 @@ class Chunsa:
     def process_msg(self, msg):
         assert(self.sync == True)
         assert(Database.connected and self.brain is not None)
-
-        # processing async-generated messages
-        # NOT YET TESTED
-        # while not self.msg_result_queue.empty():
-        #     message = self.msg_result_queue.get()
-        #     self.write(message)
-
         return self.inner_process(msg)
 
     def process_msg_async(self):

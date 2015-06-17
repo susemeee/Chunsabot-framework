@@ -134,6 +134,15 @@ else:
 
     def on_chat_update(peer, what):
         pass
+            
+    def on_loop():
+        # processing message stored in queue
+        while not ch.msg_result_queue.empty():
+            r = ch.msg_result_queue.get()
+            if r.peer:
+                r.peer.send_msg(r.content)
+            else:
+                print("Got async message but r.peer not set.")
 
     # Set callbacks
     tgl.set_on_binlog_replay_end(on_binlog_replay_end)
@@ -143,3 +152,4 @@ else:
     tgl.set_on_secret_chat_update(on_secret_chat_update)
     tgl.set_on_user_update(on_user_update)
     tgl.set_on_chat_update(on_chat_update)
+    tgl.set_on_loop(on_loop)

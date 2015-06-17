@@ -218,11 +218,9 @@ class Botlogic:
             return unicode(result)+u"\r\nTook {0} ms".format((time.time() - t)*1000)
         elif msg == u"@Asynctest":
             import time
-
             def process():
                 time.sleep(3)
-                self.sockets.write(ResultMessage("asdf", peer=extras['peer']))
-                # self.sockets.add_result_msg(ResultMessage("asdf", peer=extras['peer']))
+                self.sockets.add_result_msg(ResultMessage("asdf", peer=extras['peer']))
 
             from threading import Thread
             p = Thread(target=process)
