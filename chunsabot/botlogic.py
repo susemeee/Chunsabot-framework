@@ -14,7 +14,6 @@ from chunsabot.logger import Logger
 from chunsabot.database import Database
 # from chunsabot.modules.schedule import *
 from chunsabot.modules.learn import Learnlogic
-from chunsabot.modules.verify_url import VerifyUrl
 
 __regex__ = type(re.compile(''))
 
@@ -322,9 +321,6 @@ class Botlogic:
             extra_cmd = splited_msg[1]
         else:
             extra_cmd = None
-
-        if command == u"URL검증":
-            return VerifyUrl.info()
 
         match = False
         #routing to modules

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from chunsabot.botlogic import brain
-from chunsabot.modules.verify_url import VerifyUrl
 from chunsabot.modules.learn import Imagewait
 from chunsabot.logger import Logger
 import re
@@ -15,6 +14,13 @@ emotions = [u'좋아요',u'싫어요',u'슬퍼요',u'기뻐요',u'힘내요',u'�
 emoticon_map = [u'(미소)', u'(눈물)', u'(눈물)', u'(방긋)', u'(브이)', u'(반함)', u'(버럭)', u'(으으)', u'(부끄)', u'(당황)', u'(눈물)', u'(부끄)', u'(행복)', u'(당황)', u'(궁금)', u'(궁금)']
 emotion_reply_map = [u'저도 [WORD] [EMOTION]! [EMOTICON]', u'[WORD][EMOTICON]', u'[EMOTICON][EMOTION]~~', u'완전 [EMOTION]!']
 
+url_only_re = re.compile('(http://)?[가-힣\x00-\xff]+\.\
+(MUSEUM|TRAVEL|AERO|ARPA|ASIA|EDU|GOV|MIL|MOBI|COOP|INFO|NAME|BIZ|CAT|COM|INT|JOBS|NET|ORG|PRO|TEL|\
+A[CDEFGILMNOQRSTUWXZ]|B[ABDEFGHIJLMNORSTVWYZ]|C[ACDFGHIKLMNORUVXYZ]|D[EJKMOZ]|E[CEGHRSTU]\
+|F[IJKMOR]|G[ABDEFGHILMNPQRSTUWY]|H[KMNRTU]|I[DELMNOQRST]|J[EMOP]|K[EGHIMNPRWYZ]\
+|L[ABCIKRSTUVY]|M[ACDEFGHKLMNOPQRSTUVWXYZ]|N[ACEFGILOPRUZ]|OM|P[AEFGHKLMNRSTWY]\
+|QA|R[EOSUW]|S[ABCDEGHIJKLMNORTUVYZ]|T[CDFGHJKLMNOPRTVWZ]|U[AGKMSYZ]|V[ACEGINU]\
+|W[FS]|Y[ETU]|Z[AMW])+')
 
 @brain.startswith(u"지우기", disable_when_silence=True)
 def delete_msg(msg, extras=None):
@@ -153,7 +159,7 @@ def process(msg, extras, detect_curse=True):
 
             if phone_re.search(msg):
                 return u"대체 폰번호는 왜 가르치는거에요?"
-            elif VerifyUrl.url_only_re.search(msg.upper()):
+            elif url_only_re.search(msg.upper()):
                 return u"대체 URL 주소는 왜 가르치는거에요?"
 
         return learn_new(msg, room_id)
