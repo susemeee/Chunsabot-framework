@@ -132,19 +132,26 @@ Remark
 
 - *Mafiagame (mafia.py) and SharedScheduler (schedule.py) is not yet fully implemented and tested.*
 
-- Response packets with ensure_outgoing enabled are not yet tested in with very busy situation.
-
 - Some modules are not yet tested after the migration. (such as weather.py)
 
-- verify_url.py is a module which verifies a given URL is whether spam or not. Since the API is now broken (Note, Chunsabot is originally deployed 1 year ago), it won't work.
+- ~~verify_url.py is a module which verifies a given URL is whether spam or not. Since the API is now broken (Note, Chunsabot is originally deployed 1 year ago), it won't work.~~
+it is now deprecated.
 
 
 ####Editing config.yaml file
 
 *We don't have to create config.py but configmaker does it for you.*
 
-***TBA***
-
+|   keys for config   | type |   description                                                        |
+----------------------|------|----------------------------------------------------------------------| 
+|      curse_map      | list |  Collection of words which should be filtered.                       |
+|  debug_allowed_room | list |  Collection of rooms which should accept messages during debug mode. |
+|  debug_mode         | bool |  Switch for "debug mode".                                            |
+|  debug_users        | list |  Collection of users allowing "debug command". (starts with @)       |
+|  leave              | str  |  Keyword for force bot to leave the room. (Telegram unsupported)     | 
+|  sensitive_map      | list |  Collection of words which should be applied only in the room where executed the learn command. |
+|  weather_url_all    | str  |  KMA Weather API URL                                                 |
+|  google_api_key     | str  |  Google API Key for searching images and YouTube.                    |
 
 ####Extras (passed to botlogic with msg)
 
@@ -152,9 +159,9 @@ Remark
 |------------|---------|-------------|
 |  room_id   | long    | Unique identifier of room.        |
 |  user_id   | int     | Unique identifier of person.      |
-| user_name  | unicode | User's current profile name.      |
+| user_name  | str     | User's current profile name.      |
 |    room    | dict    | Current room for current message. |
-| attachment | dict    | Contains non-message matters. (Image, emoticon etc) |
+|    peer    | object  | representing "peer" for Telegram messenger. |
 
 
 Support
