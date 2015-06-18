@@ -22,9 +22,7 @@ def _hash(url):
     return "{0}".format(hashlib.sha256(url.encode('utf-8')).hexdigest()[:16])
 
 def _send_photos_from_url(url):
-    # print(url)
     path = os.path.join(Botlogic.__temppath__, _hash(url))
-    # print(path)
 
     if not os.path.exists(path):
         r = requests.get(url)

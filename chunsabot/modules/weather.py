@@ -68,15 +68,6 @@ class Weather:
 
         return u"{0}\r\n{1}".format(day, text)
 
-    # def find_location(region, all_locations, c):
-    #     location = None
-    #     for l in all_locations:
-    #         name = l.find(c).text
-    #         if region in name:
-    #             location = l.findAll('data')
-    #             break
-    #     return location
-
 
 @brain.route(u"날씨")
 def async_view(msg, extras):

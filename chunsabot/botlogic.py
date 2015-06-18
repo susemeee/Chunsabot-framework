@@ -19,7 +19,7 @@ __regex__ = type(re.compile(''))
 
 class Room:
     def __repr__(self):
-        return "<Room>\r\nMembers : {3}\r\nMafiagame : {0}\r\nUpanddown : {1}\r\nSilence : {2}".\
+        return "<Room>\r\nMembers : {3}\r\nMafiagame : {0}\r\nUpanddown : {1}\r\nSilence : {2}\r\n".\
         format(self.mafia, self.upanddown, self.silence, self.members)
 
     def __init__(self):
