@@ -77,9 +77,8 @@ class Learnlogic:
         while not self.sockets.shutdown:
             l.acquire()
             self.user_hot = { k : v - 1 for k, v in self.user_hot.items() if v > 1 }
-            # print self.user_hot
             l.release()
-            time.sleep(5)
+            time.sleep(3)
 
     def engage_user_hot(self, user_id):
         try:
@@ -87,7 +86,7 @@ class Learnlogic:
         except KeyError:
             self.user_hot[user_id] = 1
 
-        if self.user_hot[user_id] > 4:
+        if self.user_hot[user_id] > 5:
             return True
         else:
             return False
