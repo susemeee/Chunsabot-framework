@@ -67,7 +67,6 @@ class Chunsa:
         # functions
         self.cwrite = default_func
         self.leave = default_func
-        self.write_image = default_func
         self.on_close = default_func
 
         if not Database.connected and not self.brain:
@@ -89,6 +88,8 @@ class Chunsa:
     def image_ready(self, room_id, user_id):
         return self.brain.image_ready(room_id, user_id)
 
+    def writewrapper(self):
+        return {"cwrite" : self.cwrite, "write" : self.write, "leave" : self.leave}
 
     def write(self, msg, peer):
         if type(msg) is str:
@@ -152,6 +153,7 @@ class Chunsa:
 
     def close_sync_process(self):
         self.logger.info("Closing process thread")
+        self.shutdown_socket = True
         self.brain.save_rooms()
         self.on_close()
 
@@ -159,7 +161,6 @@ class Chunsa:
         self.msg_queue.put(self.msg_queue_Shutdown)
         self.shutdown = True
         self.shutdown_socket = True
-        self.on_close()
 
     def process_msg(self, msg):
         assert(self.sync == True)
@@ -179,6 +180,7 @@ class Chunsa:
 
         self.logger.info("Closing process thread")
         brain.save_rooms()
+        self.on_close()
 
 
     def inner_process(self, msg):

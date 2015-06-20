@@ -4,7 +4,6 @@ from chunsabot.database import enum
 import random
 import time
 from threading import Timer
-from types import FunctionType
 
 Gamestate = enum(WAIT=0, NOON=1, NIGHT=2, VOTING=3, END=4)    
         #WAIT NOON NIGHT VOTING END
@@ -12,7 +11,7 @@ Job = enum(MAFIA=0, POL=1, DOC=2, SIMIN=3)
 
 class Mafiagame:
     # i = 0
-    d = [u'첫', u'한', u'두', u'셋', u'넷', u'다섯', u'여섯', u'일곱', u'여덟', u'아홉', u'열']
+    d = [u'0', u'첫', u'두', u'세', u'네', u'다섯', u'여섯', u'일곱', u'여덟', u'아홉', u'열']
     
     j = [u'마피아', u'경찰', u'의사', u'시민']
     ab = [u'살인', u'수사', u'치료', u'투표']
@@ -72,8 +71,12 @@ class Mafiagame:
 
     m_dup_name_warn = u"마피아 : 중복되는 닉네임 [NAME]님이 있습니다. \r\n카카오톡 프로필에서 닉네임이 겹치지 않도록 변경해 주어야 게임을 진행할 수 있습니다."
 
-    def __init__(self, chatNum, _sockets):
-        self.Sockets = _sockets
+    def __init__(self, chatNum, write, cwrite, leave):
+        self.write = write
+        self.cwrite = cwrite
+        self.leave = leave
+        self.registered = True
+
         self.day = 1
         self.is_closing = False
         self.room_id = chatNum
@@ -87,22 +90,23 @@ class Mafiagame:
         self.target_player = {u'마피아' : [], u'경찰' : [], u'의사' : [], u'시민' : [] }
         self.state = Gamestate.WAIT
 
-    # @classmethod
-    # def give_uid():
-    #     Mafiagame.i+=1
-    #     return chr(Mafiagame.i%26+65) 
+    # write, cwrite and leave don't support pickling so exclude it
+    def __getstate__(self):
+        d = dict((k, v) for (k, v) in self.__dict__.items() 
+            if k != "write" and k != "cwrite" and k != "leave")
+        d["registered"] = False
 
-    def print_elapsed(self):
-        # if self.state == Gamestate.NIGHT:
-        #     return m_
-        # if self.state == Gamestate.VOTING:
-            
-        # if self.state == Gamestate.NOON:
-        pass
+        return d
+
+    def register_func(self, write, cwrite, leave):
+        self.write = write
+        self.cwrite = cwrite
+        self.leave = leave
+
     @classmethod
     def info(cls):
-        return u"마피아 : 카카오톡으로 하는 마피아 게임!\r\n .준비 명령어로 게임 참여자를 결정하고, .시작 명령어로 게임을 시작할 수 있습니다. \r\n\
-(일정 인원을 넘어야 게임을 시작할 수 있습니다)\r\n명령어 : {0}".format(" ".join(Mafiagame.c))
+        return u"마피아 : 카카오톡으로 하는 마피아 게임!\r\n.준비 명령어로 게임 참여자를 결정하고, .시작 명령어로 게임을 시작할 수 있습니다. \r\n\
+(일정 인원을 넘어야 게임을 시작할 수 있습니다)\r\n명령어 : {0}".format(" ".join(cls.c))
 
     @classmethod
     def print_suitable_numder(cls):
@@ -135,12 +139,15 @@ class Mafiagame:
         for p in self.players.values():
             if p.job == job_name:
                 if id:
-                    l.append(p.id)
+                    # telegram requires p.peer to create a chat
+                    l.append(p.peer)
                 else:
                     l.append(p)
         return l
 
     def translate(self, msg, e):
+
+        peer = e["peer"]
         room_id = e['room_id']
         player_id = e['user_id']
         player_name = e['user_name']
@@ -150,7 +157,7 @@ class Mafiagame:
         
         res = None
         if msg == u"준비":
-            res = self.player_ready(True, player_id, player_name)
+            res = self.player_ready(True, player_id, peer=peer, player_name=player_name)
         elif msg == u"준비취소":
             res = self.player_ready(False, player_id)
         elif msg == u"시작":
@@ -167,12 +174,6 @@ class Mafiagame:
         elif msg == u"예":
             if self.is_closing:
                 self.stop()
-        elif msg == u"내정보":
-            # for p in self.players:
-            #     if p.id == player_id:
-            #         return p.print_uid()
-            pass
-        
 
         mine = self.players[player_id]
 
@@ -229,14 +230,14 @@ class Mafiagame:
                 return Mafiagame.m_ab_cancel.format(Mafiagame.ab[vote_by])
             
 
-    def player_ready(self, ready, player_id, player_name=None):
+    def player_ready(self, ready, player_id, peer=None, player_name=None):
         assert(type(ready) is bool)
         if ready:
             for p in self.players.values():
                 if p.name == player_name:
                     return Mafiagame.m_dup_name_warn
 
-            self.players[player_id] = (Player(player_id, player_name))
+            self.players[player_id] = Player(player_id, player_name, peer)
             return u"마피아 : [NAME]님이 준비하였습니다. \r\n현재 준비한 인원 수 : {0}".format(len(self.players))
         else:
             try:
@@ -283,7 +284,7 @@ class Mafiagame:
         # return self.cycle()
 
     def print_msg(self, msg):
-        self.Sockets.write(self.room_id, msg, ensure_outgoing=True)
+        self.sockets.write(self.room_id, msg, ensure_outgoing=True)
 
     def start(self):
         #마피아에 맞는 인원수인지 확인
@@ -313,9 +314,9 @@ class Mafiagame:
             print(l)
 
         #inviting jobs
-        self.roomid_mafia = self.Sockets.cwrite(self.get_player_list(u'마피아', id=True), Mafiagame.m_mafia_init)
-        self.roomid_pol = self.Sockets.cwrite(self.get_player_list(u'경찰', id=True), Mafiagame.m_pol_init)
-        self.roomid_doc = self.Sockets.cwrite(self.get_player_list(u'의사', id=True), Mafiagame.m_doc_init)
+        self.roomid_mafia = self.sockets.cwrite(self.get_player_list('마피아', id=True), '마피아의 방', messages=Mafiagame.m_mafia_init)
+        self.roomid_pol = self.sockets.cwrite(self.get_player_list('경찰', id=True), '경찰의 방', messages=Mafiagame.m_pol_init)
+        self.roomid_doc = self.sockets.cwrite(self.get_player_list('의사', id=True), '의사의 방', messages=Mafiagame.m_doc_init)
 
         self.state = Gamestate.NIGHT
         self.cycle()
@@ -323,9 +324,9 @@ class Mafiagame:
         return Mafiagame.m_mafia_first
 
     def stop(self):
-        self.Sockets.leave(self.roomid_mafia)
-        self.Sockets.leave(self.roomid_pol)
-        self.Sockets.leave(self.roomid_doc)
+        self.sockets.leave(self.roomid_mafia)
+        self.sockets.leave(self.roomid_pol)
+        self.sockets.leave(self.roomid_doc)
 
         self.roomid_mafia = None
         self.roomid_pol = None
@@ -333,30 +334,13 @@ class Mafiagame:
         return Mafiagame.m_mafia_close
 
 class Player:
-    def __init__(self, player_id, player_name):
+    def __init__(self, player_id, player_name, peer):
         self.id = player_id
         self.name = player_name
         self.job = None
         self.alive = True
         self.voted = False
+        self.peer = peer
     
     def __repr__(self):
         return u"Name : {0}, Job : {1}, Alive : {2}, Voted : {3}".format(self.name, self.job, self.alive, self.voted).encode('utf-8')
-
-class CustomTimer:
-    def __init__(self, loop, interval=1, tick=None, finished=None):
-        assert(type(tick) is FunctionType and type(finished) is FunctionType)
-
-        self.interval = interval
-        self.loop = loop
-        self.tick = tick
-        self.finished = finished
-        self.rt = Thread()
-
-    def timer_start(self):
-        s = loop
-        while s > 0:
-            s -= 1
-            tick()
-            time.sleep(interval)
-        self.finished()

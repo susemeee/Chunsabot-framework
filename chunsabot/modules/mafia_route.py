@@ -14,11 +14,14 @@ def route_mafia(msg, extras):
 
         if not room.mafia:
             if not brain.update_ready:
-                room.mafia = Mafiagame(room_id, brain.sockets)
+                room.mafia = Mafiagame(room_id, **brain.sockets.writewrapper())
                 return room.mafia.translate(msg, extras)
             else:
                 return u"현재 업데이트 준비 중입니다! 새로운 마피아 게임을 시작할 수 없습니다."
         else:
+            if not room.mafia.registered:
+                room.mafia.register_func(**brain.sockets.writewrapper())
+                    
             return room.mafia.translate(msg, extras)
 
 @brain.route(Mafiagame.c)

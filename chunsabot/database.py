@@ -190,8 +190,10 @@ class Database(dict):
             cp = pickle.loads(cp)
             print("{0} loaded from saved file".format(name))
             return cp
-        except Exception:
+        except Exception as e:
             print(u"방 저장된 정보 불러오기 실패 - 처음 실행하나요?")
+            import traceback
+            traceback.print_exc()
             return None
 
     @staticmethod
