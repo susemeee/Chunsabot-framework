@@ -17,7 +17,6 @@ GOOGLE_Y_SEARCH_URL = "https://www.googleapis.com/youtube/v3/search?part=snippet
 GOOGLE_IMG_SEARCH_RESULT = "GoogleImage"
 GOOGLE_IMG_SEARCH_URL = "http://ajax.googleapis.com/ajax/services/search/images?v=1.0&rsz=5&q={0}&imgsz=small|medium|large&key={1}"
 
-
 def _hash(url):
     return "{0}".format(hashlib.sha256(url.encode('utf-8')).hexdigest()[:16])
 

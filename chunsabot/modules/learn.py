@@ -13,7 +13,7 @@ class Imagewait:
         self.key = k
 
 #learn singleton object
-learn = None
+initialized_once = False
 
 class Learnlogic:
     """
@@ -23,9 +23,8 @@ class Learnlogic:
     __overload__ = u"이 방에서 너무 많은 짤을 부르고 있습니다!"
 
     def __init__(self, _sockets):
-        global learn
-        assert(learn == None)
-        learn = self
+        global initialized_once
+        assert(not initialized_once)
 
         self.sockets = _sockets
         self.curse_map = Database.load_config('curse_map')
@@ -47,6 +46,8 @@ class Learnlogic:
         self.user_hot = {}
         self.t = Thread(target=self.async_release_user_hot, args=(self.l,))
         self.t.start()
+
+        initialized_once = True
 
     def is_image_waiting(self, room_id, user_id, delete=False):
         for i in self.image_wait:

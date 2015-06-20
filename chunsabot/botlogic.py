@@ -24,7 +24,6 @@ class Room:
 
     def __init__(self):
         self.mafia = None
-        self.monster = None
         self.silence = None
         self.upanddown = { 'num' : -1, 'start' : False }
         self.god_list = []
@@ -82,7 +81,6 @@ class Botlogic:
         initialized_once = True
 
     def save_rooms(self):
-        # self.sch.save_object()
         Database.save_object(Botlogic.__roompath__, self.rooms)
         
     def new_room(self, room_id):

@@ -67,7 +67,6 @@ else:
             peer=peer)
 
     def _on_close():
-        print("closing")
         tgl.safe_exit(0)
 
     def _cwrite(peer_list, name=""):
@@ -100,7 +99,7 @@ else:
 
     def on_msg_receive(msg):
         global our_id
-
+        
         try:
             if msg.out and not binlog_done:
                 return
