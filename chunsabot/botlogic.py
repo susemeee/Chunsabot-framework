@@ -12,8 +12,8 @@ initialized_once = False
 from chunsabot.messages import Message, ResultMessage, ContentType
 from chunsabot.logger import Logger
 from chunsabot.database import Database
-# from chunsabot.modules.schedule import *
 from chunsabot.modules.learn import Learnlogic
+from chunsabot.modules.mafia import Mafiagame, MafiaRoom
 
 __regex__ = type(re.compile(''))
 
@@ -44,7 +44,12 @@ class Botlogic:
 
     @staticmethod
     def hello():
-        return u"안녕하세요(미소)\r\n** 수호천사의 계정이 변경되었습니다! (chunsabot) \r\n이전 계정은 더 이상 동작하지 않습니다.\r\n.계정을 입력해 보세요.\r\n메시지가 씹힐 때 왜 그런지 알고 싶으면 .더보기 를 입력해 보세요.\r\n.도움말 을 통해서 명령어를 확인할 수 있습니다."
+        return u"안녕하세요(미소)\r\n\
+        ** 수호천사의 계정이 변경되었습니다! (chunsabot) \r\n\
+        이전 계정은 더 이상 동작하지 않습니다.\r\n\
+        .계정을 입력해 보세요.\r\n\
+        메시지가 씹힐 때 왜 그런지 알고 싶으면 .더보기 를 입력해 보세요.\r\n\
+        .도움말 을 통해서 명령어를 확인할 수 있습니다."
 
     def __init__(self, _sockets, start_time, debug=False, real_path=None):
         global brain, initialized_once
@@ -141,6 +146,9 @@ class Botlogic:
             if fn.endswith('.py') and not fn.startswith('_'):
                 fn = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'modules', fn)
                 try: 
+                    if self.debug:
+                        print("Loading {0}".format(fn))
+
                     imp.load_source(name, fn)
                 except Exception as e:
                     print("Error loading {0}: {1}".format(name, e))
@@ -223,30 +231,35 @@ class Botlogic:
             p = Thread(target=process)
             p.start()
 
-        #Image upload debugging function   
-        # elif msg.startswith(u"@IUT") or msg.startswith(u"@IUT_r"):
-        #     try:
-        #         # send it to different room
-        #         if msg.startswith(u"@IUT_r"):
-        #             ma = msg.split(' ', 2)
-        #             room = int(ma[2])
-        #         else:
-        #             ma = msg.split(' ', 1)
-        #             room = extras['room_id']
-        #         msg = ma[1]
-        #     except IndexError:
-        #         return "please specify full path."
+    def translate_mafia_room(self, room_id, room_name, peer):
+        try:
+            room_name = room_name.split("#")[0]
+            rn = room_name.split("@")
+            cu_room_id = rn[1]
+            cu_room_name = rn[0]
+            mafia = self.rooms[int(cu_room_id)].mafia
+            if mafia and mafia.start:
+                if cu_room_name in Mafiagame.__mafia__:
+                    if not mafia.room_mafia:
+                        mafia.room_mafia = MafiaRoom(room_id, peer)
+                        return Mafiagame.m_mafia_init
+                
+                elif cu_room_name in Mafiagame.__doctor__:
+                    if not mafia.room_doc:
+                        mafia.room_doc = MafiaRoom(room_id, peer)
+                        return Mafiagame.m_doc_init
 
-        #     r = self.sockets.kakao.upload_image(msg.encode('utf-8'))
-        #     if not r:
-        #         return "path error."
-        #     else:
-        #         if self.debug:
-        #             self.logger.debug("IMAGEPATH : msg | IMAGEURL : "+r)
-        #         self.sockets.kakao.write_image(room, r, check_result=False)
-        # elif msg.startswith(u"@leave"):
-        #     self.sockets.kakao.leave(extras['room_id'])
-                    
+                elif cu_room_name in Mafiagame.__police__:
+                    if not mafia.room_pol:
+                        mafia.room_pol = MafiaRoom(room_id, peer)
+                        return Mafiagame.m_pol_init
+                else:
+                    return True
+            else:
+                # ignoring if invalid room_id
+                return False
+        except (KeyError, IndexError, ValueError):
+            return False
 
     def translate_not_command(self, msg):
         """
@@ -255,6 +268,19 @@ class Botlogic:
         """
         room_id = msg.room_id
         user_id = msg.user_id
+
+        room_name = msg.peer.name.replace("_", " ")
+
+        # Registering mafia room
+        if Mafiagame.mafia_match(room_name):
+            m_result = self.translate_mafia_room(room_id, room_name, msg.peer)
+            if m_result:
+                if m_result == True:
+                    return None
+                else:
+                    return m_result
+            else:
+                self.sockets.logger.warning("Invalid MafiaRoom {0}".format(room_name))
 
         if room_id not in self.rooms:
             r = self.new_room(room_id)
@@ -267,11 +293,6 @@ class Botlogic:
         if user_id not in room.members:
             room.members.append(user_id)
 
-        # toUpperCase required
-        # VerifyUrl deprecated
-        # if VerifyUrl.url_only_re.match(msg.text.upper()):
-        #     VerifyUrl.async_verify_url(self.sockets, msg.text, room_id)
-
   
     def translate_attachment(self, msg):
         """
@@ -279,7 +300,6 @@ class Botlogic:
         """
         image_url = msg.attachment
         return self.learn.save_image(image_url, msg)
-
 
 
     def translate(self, msg, extras):
@@ -302,7 +322,8 @@ class Botlogic:
             "user_id" : user_id,
             "room_id" : room_id,
             "user_name" : extras.user_name,
-            "peer" : extras.peer
+            "peer" : extras.peer,
+            "by" : extras.by
         }
         
         if msg.startswith(u"@") and user_id in self.sockets.debug_users:

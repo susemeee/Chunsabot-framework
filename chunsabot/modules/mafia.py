@@ -4,12 +4,16 @@ from chunsabot.database import enum
 import random
 import time
 from threading import Timer
+from multiprocessing import Process
 
 Gamestate = enum(WAIT=0, NOON=1, NIGHT=2, VOTING=3, END=4)    
         #WAIT NOON NIGHT VOTING END
 Job = enum(MAFIA=0, POL=1, DOC=2, SIMIN=3)
 
 class Mafiagame:
+    __mafia__ = "마피아의 방@{0}"
+    __police__ = "경찰의 방@{0}"
+    __doctor__ = "의사의 방@{0}"
     # i = 0
     d = [u'0', u'첫', u'두', u'세', u'네', u'다섯', u'여섯', u'일곱', u'여덟', u'아홉', u'열']
     
@@ -17,7 +21,7 @@ class Mafiagame:
     ab = [u'살인', u'수사', u'치료', u'투표']
 
     c = [u'투표', u'살인', u'수사', u'치료', u'준비', u'준비취소', u'시작', u'게임종료', u'내정보', u'예', u'플레이어']
-    l = [None, None, None,
+    l = [None, [1,0,0], None,
     #기본 직업 분배, 나머지는 시민
     #마피아, 경찰, 의사
      [1,  1,  0],
@@ -41,7 +45,6 @@ class Mafiagame:
     ]
 
     # in seconds
-    t_night_time = 180
     t_day_time = 360
     t_vote_a_time = 120
     t_vote_time = 120
@@ -67,7 +70,7 @@ class Mafiagame:
     m_doc_init = u"[의사의 방]\r\n이곳은 직업이 의사로 결정된 분들이 초대되는 방입니다.\r\n 의사가 사용하는 능력 (.치료) 은 밤일 경우, 이 방 내에서만 작동합니다.\r\n의사가 한명이 아닐 경우, 의사들끼리 대화를 할 수 있습니다."
 
     m_mafia_close_ask = u"[마피아]\r\n현재 진행중인 마피아 게임이 있습니다. 정말 종료하시겠습니까? \r\n(.예 .아니오)"
-    m_mafia_close = u"[MAFIACLOSE][마피아]\r\n마피아 게임이 종료되었습니다! \r\n[GAMERESULT]"
+    m_mafia_close = u"[마피아]\r\n마피아 게임이 종료되었습니다! \r\n[GAMERESULT]"
 
     m_dup_name_warn = u"마피아 : 중복되는 닉네임 [NAME]님이 있습니다. \r\n카카오톡 프로필에서 닉네임이 겹치지 않도록 변경해 주어야 게임을 진행할 수 있습니다."
 
@@ -77,18 +80,24 @@ class Mafiagame:
         self.leave = leave
         self.registered = True
 
+        self.finished = False
+        self.cycle_thread = None
+        self.total_tick = 0
+        self.current_tick = 0
+
         self.day = 1
         self.is_closing = False
         self.room_id = chatNum
-        self.roomid_mafia = None
-        self.roomid_pol = None
-        self.roomid_doc = None
-        self.timer = None
+        self.room_mafia = None
+        self.room_pol = None
+        self.room_doc = None
         self.whodead = 0
         # player_id : playerObj
         self.players = {}
         self.target_player = {u'마피아' : [], u'경찰' : [], u'의사' : [], u'시민' : [] }
         self.state = Gamestate.WAIT
+
+        self.started = False
 
     # write, cwrite and leave don't support pickling so exclude it
     def __getstate__(self):
@@ -102,6 +111,15 @@ class Mafiagame:
         self.write = write
         self.cwrite = cwrite
         self.leave = leave
+
+    @classmethod
+    def mafia_match(cls, room_name):
+        if Mafiagame.__mafia__.format("") in room_name or \
+            Mafiagame.__doctor__.format("") in room_name or \
+            Mafiagame.__police__.format("") in room_name:
+            return True
+        else:
+            return False
 
     @classmethod
     def info(cls):
@@ -146,8 +164,8 @@ class Mafiagame:
         return l
 
     def translate(self, msg, e):
-
         peer = e["peer"]
+        by = e["by"]
         room_id = e['room_id']
         player_id = e['user_id']
         player_name = e['user_name']
@@ -157,7 +175,7 @@ class Mafiagame:
         
         res = None
         if msg == u"준비":
-            res = self.player_ready(True, player_id, peer=peer, player_name=player_name)
+            res = self.player_ready(True, player_id, peer=by, player_name=player_name)
         elif msg == u"준비취소":
             res = self.player_ready(False, player_id)
         elif msg == u"시작":
@@ -166,14 +184,14 @@ class Mafiagame:
             res = self.player_info()
     
         if msg == u"게임종료":
-            if self.is_closing:
+            if not self.is_closing:
                 self.is_closing = True
                 return Mafiagame.m_mafia_close_ask
             else:
-                self.stop()
+                res = self.stop()
         elif msg == u"예":
             if self.is_closing:
-                self.stop()
+                res = self.stop()
 
         mine = self.players[player_id]
 
@@ -267,26 +285,28 @@ class Mafiagame:
         Notify who is dead by vote or not
     """
     def cycle(self):
+        while not self.finished:
+            print("tick : {0}".format(self.current_tick))
+            if self.state == Gamestate.NIGHT:
+                pass
+            elif self.state == Gamestate.VOTING:
+                pass
+            elif self.state == Gamestate.NOON:
+                pass
 
-        # for p in self.players.values():
-        #     if not p.voted:
-        #         voted_all = False
+            if self.current_tick > 10:
+                self.write("asdf", self.room_mafia.peer)
+                self.finished = True
 
-
-        # if self.state == Gamestate.NIGHT:
-        #     self.timer.
-        # if self.state == Gamestate.VOTING:
+            self.total_tick += 1
+            self.current_tick += 1
+            time.sleep(1)
             
-        # if self.state == Gamestate.NOON:
-        pass
-            
-
-        # return self.cycle()
-
-    def print_msg(self, msg):
-        self.sockets.write(self.room_id, msg, ensure_outgoing=True)
 
     def start(self):
+        if self.started:
+            return "[마피아]\r\n게임이 이미 시작되었습니다!"
+
         #마피아에 맞는 인원수인지 확인
         try:
             app_jobs = Mafiagame.l[len(self.players)]
@@ -295,7 +315,7 @@ class Mafiagame:
         except IndexError:
             return u"마피아 : 적정 인원수가 아닙니다.\r\n(적정 인원수 : 4~20명)"
         #직업 분배
-        keys = self.players.keys()
+        keys = list(self.players.keys())
         random.shuffle(keys)
 
         for j in range(0, len(self.players)):
@@ -313,25 +333,37 @@ class Mafiagame:
             l = p.__repr__()
             print(l)
 
-        #inviting jobs
-        self.roomid_mafia = self.sockets.cwrite(self.get_player_list('마피아', id=True), '마피아의 방', messages=Mafiagame.m_mafia_init)
-        self.roomid_pol = self.sockets.cwrite(self.get_player_list('경찰', id=True), '경찰의 방', messages=Mafiagame.m_pol_init)
-        self.roomid_doc = self.sockets.cwrite(self.get_player_list('의사', id=True), '의사의 방', messages=Mafiagame.m_doc_init)
+        self.finished = False
+        self.started = True
+        # Inviting jobs
+        # Inviting method of peers is subject to change.
+        self.roomid_mafia = self.cwrite(self.get_player_list('마피아', id=True), Mafiagame.__mafia__.format(self.room_id), messages=Mafiagame.m_mafia_init)
+        self.roomid_doc = self.cwrite(self.get_player_list('경찰', id=True), Mafiagame.__police__.format(self.room_id), messages=Mafiagame.m_pol_init)
+        self.roomid_pol = self.cwrite(self.get_player_list('의사', id=True), Mafiagame.__doctor__.format(self.room_id), messages=Mafiagame.m_doc_init)
 
         self.state = Gamestate.NIGHT
-        self.cycle()
+        self.cycle_thread = Process(target=self.cycle)
+        self.cycle_thread.start()
 
         return Mafiagame.m_mafia_first
 
     def stop(self):
-        self.sockets.leave(self.roomid_mafia)
-        self.sockets.leave(self.roomid_pol)
-        self.sockets.leave(self.roomid_doc)
+        self.finished = True
+        self.started = False
+
+        self.leave(self.roomid_mafia)
+        self.leave(self.roomid_pol)
+        self.leave(self.roomid_doc)
 
         self.roomid_mafia = None
         self.roomid_pol = None
         self.roomid_doc = None
         return Mafiagame.m_mafia_close
+
+class MafiaRoom:
+    def __init__(self, room_id, peer):
+        self.room_id = room_id
+        self.peer = peer
 
 class Player:
     def __init__(self, player_id, player_name, peer):
@@ -343,4 +375,4 @@ class Player:
         self.peer = peer
     
     def __repr__(self):
-        return u"Name : {0}, Job : {1}, Alive : {2}, Voted : {3}".format(self.name, self.job, self.alive, self.voted).encode('utf-8')
+        return u"Name : {0}, Job : {1}, Alive : {2}, Voted : {3}".format(self.name, self.job, self.alive, self.voted)
