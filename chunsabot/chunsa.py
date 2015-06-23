@@ -55,6 +55,7 @@ class Chunsa:
         self.lock = False
 
         # used in async_status
+        self.run_async_status = False
         self.p_count = 0
         self.m_count = 0
         self.warning_recv = 0
@@ -94,6 +95,7 @@ class Chunsa:
     def write(self, msg, peer):
         if type(msg) is str:
             msg = ResultMessage(msg, peer=peer)
+            
         self.add_result_msg(msg)
 
     def add_result_msg(self, msg):
@@ -129,6 +131,7 @@ class Chunsa:
 
     def init_process(self):
         if not self.th_profile and not profiling and not self.debug_mode:
+            self.run_async_status = True
             self.th_profile = Thread(target=self.async_status)  
             self.th_profile.start()
             pass
@@ -234,20 +237,21 @@ class Chunsa:
                     else:
                         self.close_async_process()
 
+                if resp.content_type == ContentType.Leave:
+                    self.leave(room_id, peer=msg.peer)
+
                 if self.sync:
                     return resp
                 else:
                     self.write(resp)
 
-                if resp.content_type == ContentType.Leave:
-                    self.leave(room_id)
-
         elif self.debug_mode and room_id not in self.debug_allowed_room:
             self.logger.info("Ignoring non-debug room : {0}".format(room_id))
-            self.leave(msg.room_id)
 
         self.profiler.end()
-        self.p_count += 1
+
+        if self.run_async_status:
+            self.p_count += 1
 
 
 def starttime(date_only=False):
@@ -273,8 +277,8 @@ class profile_logic:
             rt = (time.time() - self.t)*1000                            
             print(str(rt) + "ms")
             if rt > 10:
-                # print "Request : "+msg
-                # print "Response : "+resp
+                print("Request : "+msg)
+                print("Response : "+resp)
                 if rt > 100:
                     import pdb
                     pdb.set_trace()

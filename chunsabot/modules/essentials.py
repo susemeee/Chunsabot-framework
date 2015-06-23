@@ -12,7 +12,7 @@ def leave(cmd, msg, extras):
     
     if brain.debug:
         return u"The administrator has set the bot to not leave the room. This account is created for debugging and testing a new feature. :D"
-    elif brain.rooms[room_id].silence and brain.rooms[room_id].silence['id'] != user_id:
+    if brain.rooms[room_id].silence and brain.rooms[room_id].silence['id'] != user_id:
         if len(brain.rooms[room_id].silence['override']) >= 3:
             return brain.leave(room_id)
         else:

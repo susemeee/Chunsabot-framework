@@ -7,8 +7,17 @@ class ContentType(Enum):
     Exit = 999
 
 class Message:
-    def __init__(self, room_id, user_id, user_name, text, datetime, peer=None, attachment=None):
-        self.peer = peer
+    def __init__(self, room_id, user_id, user_name, text, datetime, peer=None, by=None, attachment=None):
+        # used for Mafiagame
+        if peer:
+            self.peer = peer
+        else:
+            self.peer = room_id
+        if by:
+            self.by = by
+        else:
+            self.by = user_id
+
         self.room_id = room_id
         self.user_id = user_id
         self.user_name = user_name
@@ -29,4 +38,4 @@ class ResultMessage:
         self.reply = reply
 
     def __repr__(self):
-        return "<ResultMessage>\npeer : {0}\ncontent : {1}\nreply : {2}".format(peer, content, reply)
+        return "<ResultMessage>\npeer : {0}\ncontent : {1}\nreply : {2}".format(self.peer, self.content, self.reply)

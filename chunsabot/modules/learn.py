@@ -12,7 +12,6 @@ class Imagewait:
         self.user_id = u
         self.key = k
 
-#learn singleton object
 initialized_once = False
 
 class Learnlogic:
@@ -99,7 +98,6 @@ class Learnlogic:
         self.image_map.delete(key)
 
     def save_image(self, image_url, extras):
-        # image_url = '/'+image_url.split('/', 3)[3]
         if not image_url.endswith(Imagewait.image_ext):
             return None
         else:

@@ -25,9 +25,7 @@ def main():
 
 if __name__ == "__main__":
     import argparse
-    import base64
-    import random
-
+    
     parser = argparse.ArgumentParser(description='Chunsabot main framework')
 
     parser.add_argument('--make-initial-config', dest='initial_config', action='store_true', default=True,
@@ -54,6 +52,7 @@ else:
 
     ch = Chunsa(real_path=real_path, sync=True)
 
+    my_peer = None
     our_id = 0
     binlog_done = False
 
@@ -64,13 +63,19 @@ else:
             text=msg.text, 
             datetime=msg.date,
             attachment=attachment,
-            peer=peer)
+            peer=peer,
+            by=_by)
 
     def _on_close():
         tgl.safe_exit(0)
 
-    def _cwrite(peer_list, name=""):
-        tgl.create_group_chat(peer_list, name)
+    def _cwrite(peer_list, name="", messages=""):
+        # some trick to create chat room with 1 member
+        if len(peer_list) > 0:
+            while len(peer_list) < 3:
+                peer_list.append(peer_list[0])
+        
+        r = tgl.create_group_chat(peer_list, name)
 
     ch.cwrite = _cwrite
     ch.on_close = _on_close
@@ -99,7 +104,7 @@ else:
 
     def on_msg_receive(msg):
         global our_id
-        
+
         try:
             if msg.out and not binlog_done:
                 return
