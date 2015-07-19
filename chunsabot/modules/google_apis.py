@@ -64,7 +64,7 @@ def random_youtube_info():
 """
 
 
-@brain.startswith("짤")
+@brain.route("짤")
 def random_image(msg, extras):
     if not msg:
         return random_image_info()
