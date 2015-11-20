@@ -31,20 +31,20 @@ class Weather:
 
         result[None] = whole_description.replace('<br  />', '\r\n').replace('<br />', '\r\n')
         result[u'전국'] = result[None]
-        
+
         for loca in all_locations:
             # mapping province text to city
             Weather.province_map[loca.find('province').text] = loca.find('city').text
-            
+
             region = loca.find('city').text
             data = loca.findAll('data')
             res = []
-            
+
             weather_location_header = u"{0} 지역의 날씨 정보입니다.\r\n({1} 발표)".format(region, published_date)
             weather_location_footer = u"data by 기상청 RSS 서비스"
-            
-            res.append(weather_location_header) 
-            i = 2           
+
+            res.append(weather_location_header)
+            i = 2
             for d in data:
                 res.append(Weather.prettify(i, d))
                 i += 1
@@ -61,8 +61,8 @@ class Weather:
         apm = [u'오전', u'오후']
         day = u"[{0}일 후 {1}예보]".format(i/2, apm[i%2])
 
-        tmx = data.find('tmx').text 
-        tmn = data.find('tmn').text 
+        tmx = data.find('tmx').text
+        tmn = data.find('tmn').text
         wf = data.find('wf').text
         text = u"{0}, 기온 {1}°C ~ {2}°C".format(wf, tmn, tmx)
 
@@ -73,7 +73,7 @@ class Weather:
 def async_view(msg, extras):
     def info():
         return u"날씨 : 전국 날씨에 관한 간략한 설명 또는 지역별 날씨를 볼 수 있습니다. \r\n예) .날씨 전국 .날씨 경기도"
-    
+
     if not msg:
         return info()
     else:
@@ -92,7 +92,7 @@ def async_view(msg, extras):
     #new_cache returns parsed info
     if new_cache:
         Cache.save(Weather.cWEATHER_GET_URL, info_all)
-        
+
     try:
         # Inaccurate
         for tu in Weather.province_map.items():
@@ -105,7 +105,3 @@ def async_view(msg, extras):
     except KeyError:
         return Weather.no_such_region
         # Sockets.write(room_id, Weather.no_such_region)
-
-    
-
-    

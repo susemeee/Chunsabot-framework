@@ -25,7 +25,7 @@ def main():
 
 if __name__ == "__main__":
     import argparse
-    
+
     parser = argparse.ArgumentParser(description='Chunsabot main framework')
 
     parser.add_argument('--make-initial-config', dest='initial_config', action='store_true', default=True,
@@ -46,7 +46,7 @@ else:
     import os
     from chunsabot.chunsa import Chunsa
     from chunsabot.messages import Message, ContentType
-    
+
     real_path = os.path.realpath(__file__)
     real_path = real_path[:real_path.rfind("/")]
 
@@ -57,10 +57,10 @@ else:
     binlog_done = False
 
     def _make_message(msg, peer, _by, attachment=None):
-        return Message(room_id=peer.id, 
-            user_id=_by.id, 
-            user_name=_by.name.replace("_", " "), 
-            text=msg.text, 
+        return Message(room_id=peer.id,
+            user_id=_by.id,
+            user_name=_by.name.replace("_", " "),
+            text=msg.text,
             datetime=msg.date,
             attachment=attachment,
             peer=peer,
@@ -74,7 +74,7 @@ else:
         if len(peer_list) > 0:
             while len(peer_list) < 3:
                 peer_list.append(peer_list[0])
-        
+
         r = tgl.create_group_chat(peer_list, name)
 
     ch.cwrite = _cwrite
@@ -110,17 +110,17 @@ else:
                 return
 
             _by = msg.src
-            if msg.dest.id == our_id: 
+            if msg.dest.id == our_id:
                 # direct message
                 peer = msg.src
-            else: 
+            else:
                 # chatroom
                 peer = msg.dest
 
             if msg.media and msg.media['type'] == 'photo':
                 if ch.image_ready(peer.id, _by.id):
                     msg.load_photo(lambda success, file_path: file_cb(success, file_path, peer=peer, msg=msg))
-            else:            
+            else:
                 r = ch.process_msg(_make_message(msg, peer, _by))
                 if r:
                     peer.mark_read(empty_cb)
@@ -142,7 +142,7 @@ else:
 
     def on_chat_update(peer, what):
         pass
-            
+
     def on_loop():
         # processing message stored in queue
         while not ch.msg_result_queue.empty():

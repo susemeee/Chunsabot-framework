@@ -6,7 +6,7 @@ import time
 
 class Imagewait:
     image_ext = (u'jpg', u'jpeg', u'png', u'bmp', u'gif', u'svg', u'tif', u'tga')
-    
+
     def __init__(self, r, u, k):
         self.room_id = r
         self.user_id = u
@@ -27,7 +27,7 @@ class Learnlogic:
 
         self.sockets = _sockets
         self.curse_map = Database.load_config('curse_map')
-        
+
         #adding name_map later
         # self.name_map = Database.load_object(Learnlogic.__namepath__, 'name') or []
 
@@ -40,7 +40,7 @@ class Learnlogic:
         self.emotion_map = Database('emotion_map')
 
         self.image_wait = []
-        
+
         self.l = Lock()
         self.user_hot = {}
         self.t = Thread(target=self.async_release_user_hot, args=(self.l,))
@@ -106,15 +106,7 @@ class Learnlogic:
 
             key = self.is_image_waiting(room_id, user_id, delete=True)
             if key:
-                self.image_map.save(key, image_url, room_id)                        
+                self.image_map.save(key, image_url, room_id)
                 return u"이미지가 등록되었습니다! (윙크)"
             else:
                 return None
-
-       
-
-
-
-
-
-

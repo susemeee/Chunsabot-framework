@@ -63,7 +63,7 @@ class Botlogic:
 
         self.learn = Learnlogic(_sockets)
         self.modules = []
-        
+
         #used at self.status()
         self.start_time = start_time
 
@@ -87,11 +87,11 @@ class Botlogic:
 
     def save_rooms(self):
         Database.save_object(Botlogic.__roompath__, self.rooms)
-        
+
     def new_room(self, room_id):
         self.logger.info("joined from {0}".format(str(room_id)))
         self.rooms[room_id] = Room()
-        
+
         if not self.debug:
             return Botlogic.hello()
 
@@ -112,11 +112,11 @@ class Botlogic:
     def route(self, target_msg, startswith=False, no_params=False, disable_when_silence=False, **kwargs):
         assert(isinstance(target_msg, (list, str, __regex__)))
 
-        #registering functions into logic 
+        #registering functions into logic
         def get_func(functions):
             for module in self.modules:
                 if module['target'] == target_msg:
-                    raise AssertionError("Duplicated message routing : {0}".format(module['func'].__name__))    
+                    raise AssertionError("Duplicated message routing : {0}".format(module['func'].__name__))
             try:
                 order = kwargs['order']
             except KeyError:
@@ -141,11 +141,11 @@ class Botlogic:
 
         for fn in os.listdir(os.path.join(home, 'chunsabot/modules')):
             name = os.path.basename(fn)[:-3]
-            if excluded_modules and name in excluded_modules: 
+            if excluded_modules and name in excluded_modules:
                 continue
             if fn.endswith('.py') and not fn.startswith('_'):
                 fn = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'modules', fn)
-                try: 
+                try:
                     if self.debug:
                         print("Loading {0}".format(fn))
 
@@ -157,7 +157,7 @@ class Botlogic:
 
         # ordering list
         self.modules = sorted(self.modules, key=lambda order: order['order'])
-    
+
     def private_status(self):
         # import resource
         # memory = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss/1024/1024.0
@@ -172,7 +172,7 @@ class Botlogic:
                 u_count+=1
             if not r.is_personal():
                 rm_count+=1
-        
+
         return u"[수호천사봇의 현재 상태]\r\n활동중인 방의 개수 : {0}\r\n활동중인 방의 개수(개인 대화 제외) : {1}\r\n업앤다운이 진행중인 방의 개수 : {2}\r\n마피아가 진행중인 방의 개수 : {3}\r\n총 배운 단어 : {4}\r\n켜진 시간 : {5}\r\n메모리 사용량 : {6}MB\r\n실패한 처리 시도 횟수 : {7}".\
         format(len(self.rooms), rm_count, u_count, mafia_count, self.learn.msg_map.count(), self.start_time, memory, self.sockets.warning_trans)
 
@@ -199,8 +199,8 @@ class Botlogic:
             return u"Curse registered."
         elif msg.startswith(u"@DeleteImg"):
             msg = msg.split(' ', 1)[1]
-            self.learn.delete_image(msg)    
-            return u"{0} image deleted from Database.".format(msg)         
+            self.learn.delete_image(msg)
+            return u"{0} image deleted from Database.".format(msg)
         elif msg.startswith(u"@Delete"):
             self.learn.delete_msg(extra_msg)
             return u"{0} deleted from Database.".format(msg)
@@ -243,7 +243,7 @@ class Botlogic:
                     if not mafia.room_mafia:
                         mafia.room_mafia = MafiaRoom(room_id, peer)
                         return Mafiagame.m_mafia_init
-                
+
                 elif cu_room_name in Mafiagame.__doctor__:
                     if not mafia.room_doc:
                         mafia.room_doc = MafiaRoom(room_id, peer)
@@ -293,7 +293,7 @@ class Botlogic:
         if user_id not in room.members:
             room.members.append(user_id)
 
-  
+
     def translate_attachment(self, msg):
         """
             Processing attachments, in this case, images.
@@ -318,21 +318,21 @@ class Botlogic:
             self.new_room(room_id)
 
         extras = {
-            "room" : self.rooms[room_id], 
+            "room" : self.rooms[room_id],
             "user_id" : user_id,
             "room_id" : room_id,
             "user_name" : extras.user_name,
             "peer" : extras.peer,
             "by" : extras.by
         }
-        
+
         if msg.startswith(u"@") and user_id in self.sockets.debug_users:
             return self.translate_debug(msg, extras)
 
         if u"수호천사" in msg:
             return u"ㅎ(부끄)"
         elif msg.startswith(u"안녕"):
-            return "안녕하세요~(부끄)"  
+            return "안녕하세요~(부끄)"
 
         splited_msg = msg.split(" ", 1)
         command = splited_msg[0]
@@ -351,7 +351,7 @@ class Botlogic:
                 if isinstance(target_cmd, str):
                     if module['extras']['startswith']:
                         if command.startswith(target_cmd):
-                            match = True                
+                            match = True
                     else:
                         if command == target_cmd:
                             match = True
@@ -365,12 +365,12 @@ class Botlogic:
                 if match:
                     if self.debug:
                         self.sockets.logger.debug(module['func'].__name__)
-                    
+
                     if not module['extras']['params']:
-                        return module['func']()  
+                        return module['func']()
                     # when routed from list or regex, original command will be passed
                     elif isinstance(target_cmd, (list, __regex__)):
-                        return module['func'](command, extra_cmd, extras)  
+                        return module['func'](command, extra_cmd, extras)
                     else:
                         return module['func'](extra_cmd, extras)
 
@@ -395,5 +395,3 @@ class Botlogic:
                 pass
 
         return None
-
-

@@ -21,7 +21,7 @@ def route_mafia(msg, extras):
         else:
             if not room.mafia.registered:
                 room.mafia.register_func(**brain.sockets.writewrapper())
-                    
+
             return room.mafia.translate(msg, extras)
 
 @brain.route(Mafiagame.c)
@@ -34,4 +34,3 @@ def route_direct_mafia(cmd, msg, extras):
     else:
         return u"[마피아]\r\n지금은 마피아 게임 중이 아닙니다! \r\n시작하려면 .마피아 준비 명령어를 입력해주세요."
 #end
-

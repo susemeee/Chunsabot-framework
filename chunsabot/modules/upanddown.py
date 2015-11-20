@@ -25,7 +25,7 @@ def upanddown(cmd, msg, extras):
         uobj['num'] = -1
         uobj['start'] = False
         return end_str
-    
+
     uobj = brain.rooms[extras['room_id']].upanddown
     d_num = int(cmd)
     try:

@@ -56,7 +56,7 @@ class Database(dict):
         print(u"/data/config.yaml 파일이 존재하지 않습니다. \nbot.py --make-initial-config로 설정 파일을 만들어 주세요.")
 
     @staticmethod
-    def mkdir():        
+    def mkdir():
         cfg_dir = Database.cfg_path[:Database.cfg_path.rfind('/')]
         if not os.path.isdir(cfg_dir):
             os.makedirs(cfg_dir)
@@ -87,7 +87,7 @@ class Database(dict):
         self.name = name
         if Database.c:
             if room_specific:
-                Database.c.execute(DB_Create_query_room.format(name))                
+                Database.c.execute(DB_Create_query_room.format(name))
             else:
                 Database.c.execute(DB_Create_query.format(name))
         else:
@@ -117,7 +117,7 @@ class Database(dict):
         key = key.replace("'", "''")
         value = value.replace("'", "''")
         assert(type(room) is int or room is None)
-        
+
         #accepts duplicate value
         if room:
             Database.c.execute(DB_Insert_query_room.format(self.name, key, value, room))
@@ -127,7 +127,7 @@ class Database(dict):
         Database.conn.commit()
 
 
-    def load(self, key, room=None, strict=False):  
+    def load(self, key, room=None, strict=False):
         key = key.replace("'", "''")
         assert(type(room) is int or room is None)
 
@@ -137,7 +137,7 @@ class Database(dict):
             Database.c.execute(DB_Select_query_room.format(self.name, key, room))
 
         row_array = Database.c.fetchall()
-        
+
         if len(row_array) < 1:
             if not room or strict:
                 raise KeyError
@@ -150,7 +150,7 @@ class Database(dict):
             return row_array[rand][0]
         else:
             return row_array[0][0]
-        
+
     def delete(self, what, room_id=None):
         if not room_id:
             Database.c.execute(DB_Delete_query.format(self.name, what))
@@ -158,7 +158,7 @@ class Database(dict):
             Database.c.execute(DB_Delete_query_room.format(self.name, what, room_id))
 
         return Database.c.rowcount
-        
+
     @staticmethod
     def load_config(d, ignore_when_noexist=False):
         try:
@@ -182,7 +182,7 @@ class Database(dict):
         Database.cfg_object[d] = v
         with open(Database.cfg_path, 'wb') as outfile:
             outfile.write(yaml.dump(Database.cfg_object, default_flow_style=False, encoding='utf-8', allow_unicode=True))
-    
+
     @staticmethod
     def load_object(path, name=''):
         try:
@@ -248,4 +248,3 @@ class Cache:
 
 def enum(**enums):
     return type('Enum', (), enums)
-

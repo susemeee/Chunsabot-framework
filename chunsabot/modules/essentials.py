@@ -4,12 +4,12 @@ import re
 from chunsabot.botlogic import brain
 from chunsabot.chunsa import starttime
 
-# if msg.startswith(u"나가") 
+# if msg.startswith(u"나가")
 @brain.route([u"나가", u"꺼져"])
 def leave(cmd, msg, extras):
     room_id = extras['room_id']
     user_id = extras['user_id']
-    
+
     if brain.debug:
         return u"The administrator has set the bot to not leave the room. This account is created for debugging and testing a new feature. :D"
     if brain.rooms[room_id].silence and brain.rooms[room_id].silence['id'] != user_id:
@@ -50,7 +50,7 @@ def silence(cmd, msg, extras=None, override=False):
             #is it a good code?
             brain.rooms[room_id].silence = sobj
             return u"[NAME] 님이 조용히 모드를 활성화하였습니다! (아픔)"
-    
+
     elif msg == u"취소":
         if sobj:
             if sobj['id'] != user_id and not override:
@@ -82,7 +82,7 @@ def dice(msg, extras):
     def intfromstr(s):
         try:
             return int("".join(re.findall(r'\d', s)))
-        except Exception:        
+        except Exception:
             return None
 
     n = 6
@@ -120,12 +120,10 @@ def p_god(msg, extras):
                 if msg[1] == "@All":
                     brain.rooms[room_id].god_list = []
                     return u"모두 지워졌습니다."
-                    
+
                 brain.rooms[room_id].god_list.remove(msg[1])
                 return u"{0} 님이 삭제되었습니다.".format(msg[1])
             except:
                 return u"올바르지 않은 사용법입니다."
         else:
             return u"{0}은(는) 올바르지 않은 명령어입니다.".format(msg[0])
-
-

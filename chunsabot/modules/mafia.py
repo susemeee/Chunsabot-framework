@@ -6,7 +6,7 @@ import time
 from threading import Timer
 from multiprocessing import Process
 
-Gamestate = enum(WAIT=0, NOON=1, NIGHT=2, VOTING=3, END=4)    
+Gamestate = enum(WAIT=0, NOON=1, NIGHT=2, VOTING=3, END=4)
         #WAIT NOON NIGHT VOTING END
 Job = enum(MAFIA=0, POL=1, DOC=2, SIMIN=3)
 
@@ -16,7 +16,7 @@ class Mafiagame:
     __doctor__ = "의사의 방@{0}"
     # i = 0
     d = [u'0', u'첫', u'두', u'세', u'네', u'다섯', u'여섯', u'일곱', u'여덟', u'아홉', u'열']
-    
+
     j = [u'마피아', u'경찰', u'의사', u'시민']
     ab = [u'살인', u'수사', u'치료', u'투표']
 
@@ -53,14 +53,14 @@ class Mafiagame:
     m_night = u"[DAY]번째 날 밤이 되었습니다. \r\n직업이 있는 분들은 능력을 사용해 주세요. 모든 능력이 사용될 경우 다음으로 넘어갑니다."
     m_day_normal = u"[DAY]번째 날 낮이 되었습니다. \r\n이번 밤에는 아무도 죽지 않았습니다."
     m_day_who_killed_l = [u"[DAY]번째 날 낮이 되었습니다. \r\n[NAME]님이 현장에서 주검으로 발견되었습니다."]
-    
+
     m_vote_timeleft = u"[DAY]번째 날 낮 투표 진행 전까지 [TIME]분 남았습니다."
     m_vote = u"시간이 다 지났습니다. [DAY]번째 날 낮 투표를 진행해 주세요.\r\n투표는 .투표 [이름]으로 할 수 있습니다."
     m_vote_result = u"[투표 결과]\r\n[NAME]님이 [VOTENUM]표를 받아 처형 대상으로 선정되었습니다.\r\n[NAME]님은 최후의 변론을 해 주세요."
     m_ayeornay = u"[찬반 투표 진행]\r\n[NAME]님을 정말 처형하시겠습니까? \r\n.찬성 또는 .반대로 투표해주세요."
-    m_vote_killed_l = [u"[NAME]님이 형장의 이슬로 사라졌습니다."]   
+    m_vote_killed_l = [u"[NAME]님이 형장의 이슬로 사라졌습니다."]
     m_vote_not_killed = u"[NAME]님은 처형되지 않았습니다."
-    
+
     m_pol_result = u"[수사 결과]\r\n{0}님은 마피아가 {1}."
     m_ab_confirm = u"[능력 사용]\r\n[NAME]님은 {0}님을 {1}하였습니다."
     m_ab_cancel = u"[능력 사용 취소]\r\n[NAME]님은 {0}을(를) 취소하였습니다."
@@ -101,7 +101,7 @@ class Mafiagame:
 
     # write, cwrite and leave don't support pickling so exclude it
     def __getstate__(self):
-        d = dict((k, v) for (k, v) in self.__dict__.items() 
+        d = dict((k, v) for (k, v) in self.__dict__.items()
             if k != "write" and k != "cwrite" and k != "leave")
         d["registered"] = False
 
@@ -145,7 +145,7 @@ class Mafiagame:
         if u'[GAMERESULT]' in msg:
             pass
 
-        if u'[ABILITYNAME]' in msg:    
+        if u'[ABILITYNAME]' in msg:
             pass
 
         return msg
@@ -169,10 +169,10 @@ class Mafiagame:
         room_id = e['room_id']
         player_id = e['user_id']
         player_name = e['user_name']
-        
+
         if msg not in Mafiagame.c:
             return u"마피아 : 올바르지 않은 명령어입니다."
-        
+
         res = None
         if msg == u"준비":
             res = self.player_ready(True, player_id, peer=by, player_name=player_name)
@@ -182,7 +182,7 @@ class Mafiagame:
             res = self.start()
         elif msg == u"플레이어":
             res = self.player_info()
-    
+
         if msg == u"게임종료":
             if not self.is_closing:
                 self.is_closing = True
@@ -227,7 +227,7 @@ class Mafiagame:
             return u"지금은 투표를 할 수 있는 시간이 아닙니다!"
         elif vote_by != Job.SIMIN and self.state != Gamestate.NIGHT:
             return u"지금은 능력을 사용할 수 있는 시간이 아닙니다!"
-        
+
         tp = None
         for p in self.players:
             if p.name == target_player:
@@ -246,7 +246,7 @@ class Mafiagame:
                 self.target_player[vote_name].remove(tp)
                 mine.voted = False
                 return Mafiagame.m_ab_cancel.format(Mafiagame.ab[vote_by])
-            
+
 
     def player_ready(self, ready, player_id, peer=None, player_name=None):
         assert(type(ready) is bool)
@@ -301,7 +301,7 @@ class Mafiagame:
             self.total_tick += 1
             self.current_tick += 1
             time.sleep(1)
-            
+
 
     def start(self):
         if self.started:
@@ -327,7 +327,7 @@ class Mafiagame:
                 self.players[keys[j]].job = Mafiagame.j[2]
             else:
                 self.players[keys[j]].job = Mafiagame.j[3]
-                
+
         # Debug code
         for p in self.players.values():
             l = p.__repr__()
@@ -373,6 +373,6 @@ class Player:
         self.alive = True
         self.voted = False
         self.peer = peer
-    
+
     def __repr__(self):
         return u"Name : {0}, Job : {1}, Alive : {2}, Voted : {3}".format(self.name, self.job, self.alive, self.voted)

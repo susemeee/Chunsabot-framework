@@ -31,7 +31,7 @@ def delete_msg(msg, extras=None):
         room_id = extras['room_id']
     else:
         room_id = None
-        
+
     row_match = learn.msg_map.delete(msg, room_id)
     if row_match > 0:
         return u"[지우기]\r\n{0}개의 단어를 삭제하였습니다!".format(row_match)
@@ -81,7 +81,7 @@ def process_image(msg, extras):
                 return u"[짤배우기]\r\n[NAME]님의 대기중인 키워드 \"{0}\"이(가) 삭제되었습니다.".format(o_key)
             else:
                 return u"[짤배우기]\r\n[NAME]님의 대기중인 키워드가 없습니다."
-        
+
         key = learn.is_image_waiting(room_id, user_id)
         if key:
             return u"[짤배우기]\r\n현재 [NAME]님은 이 방에서 이미지 대기 중입니다. (키워드 {0})".format(key)
@@ -105,7 +105,7 @@ def process(msg, extras, detect_curse=True):
         else:
             content = msg.split(',', 1)
             recursive = False
-        
+
         if len(content) == 2:
             get = content[0]
             response = content[1].lstrip()
@@ -113,7 +113,7 @@ def process(msg, extras, detect_curse=True):
             return info()
 
         if len(response) > 400 or get.replace(u'.', u'') == u'':
-            return u"[배우기]\r\n단어가 너무 길거나 단어가 없습니다!"            
+            return u"[배우기]\r\n단어가 너무 길거나 단어가 없습니다!"
         # experimental data
         elif extras['room'].is_personal() and get in learn.name_map:
             return u"[배우기]\r\n개인 대화에서 사람 이름을 가르칠 수 없습니다."
@@ -122,14 +122,14 @@ def process(msg, extras, detect_curse=True):
             try:
                 learn.msg_map.save(get, learn.msg_map[response], room_id)
             except KeyError:
-                return u"(당황) 그런 단어는 몰라요 ㅠㅠ"        
+                return u"(당황) 그런 단어는 몰라요 ㅠㅠ"
         else:
-            learn.msg_map.save(get, response, room_id)   
+            learn.msg_map.save(get, response, room_id)
         return u"(윙크) 알겠어요!!"
 
     room_id = extras['room_id']
     user_id = extras['user_id']
-    
+
     if msg:
         if learn.engage_user_hot(user_id):
             return u"[NAME]님은 지금 너무 많이 가르치고 있습니다!"
@@ -201,7 +201,7 @@ def pm():
 
 def _inner_info_emotion():
     return u"""[감정]
-로봇에게 감정을 가르칠 수 있습니다! 
+로봇에게 감정을 가르칠 수 있습니다!
 예) .좋아요 고려대
 {0}
 감정에 대한 정보는 추후 업데이트에서 사용될 수 있습니다.""".format(u" ".join(emotions))
@@ -213,9 +213,9 @@ def info_emotion():
 # @brain.route(u"짤배우기")
 def info_image():
     return u"""[짤배우기]
-이제 봇이 사진을 배울 수 있습니다! 
-**주의 : 천사와의 개인톡에서는 이 기능이 작동하지 않습니다! 
-1. .배우기 명령어 대신 .짤배우기가 사용됩니다. 
+이제 봇이 사진을 배울 수 있습니다!
+**주의 : 천사와의 개인톡에서는 이 기능이 작동하지 않습니다!
+1. .배우기 명령어 대신 .짤배우기가 사용됩니다.
 2. .짤배우기 명령어 후 가장 먼저 올린 사진이 적용됩니다.
 3. 사진은 점을 두 개 찍어야 불러올 수 있습니다.
 예) .짤배우기 계획대로 ->
@@ -225,8 +225,8 @@ def info_image():
 #@brain.route(u"지우기")
 def info_delete():
     return u"""[지우기]
-같은 방에서 배운 단어에 한해 배우기한 단어를    지울 수 있습니다. 
-예) 친구가 내 이름에 병신이라고 등록해놨을 때 : 
+같은 방에서 배운 단어에 한해 배우기한 단어를    지울 수 있습니다.
+예) 친구가 내 이름에 병신이라고 등록해놨을 때 :
 .지우기 내이름"""
 
 def info_delete_image():
@@ -241,8 +241,8 @@ def info():
 **.유의사항 키워드를 통하여 .배우기 키워드의 유의사항을 확인할 수 있습니다.
 예) .배우기 안녕, 안녕하세요~
 배우기를 통해 학습한 단어는 앞에 .을 붙여야 인식할 수 있습니다.
-똑같은 단어로 링크할 수도 있습니다. 
-예) 우유는?, 하얗다가 이미 있을 때 : .눈은?->우유는? 
+똑같은 단어로 링크할 수도 있습니다.
+예) 우유는?, 하얗다가 이미 있을 때 : .눈은?->우유는?
 눈은?, 하얗다
-*** 주의 *** 
+*** 주의 ***
 배우기한 단어는 모든 방에서 적용됩니다!!!"""

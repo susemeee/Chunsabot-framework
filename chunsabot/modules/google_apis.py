@@ -31,7 +31,7 @@ def _send_photos_from_url(url):
                 f.flush()
         else:
             return ResultMessage("이미지 다운로드 오류 ({0})".format(r.status_code))
-        
+
     real_path = "{0}.{1}".format(path, imghdr.what(path))
     os.rename(path, real_path)
     return ResultMessage(real_path, content_type=ContentType.Image)
@@ -73,8 +73,8 @@ def random_image(msg, extras):
 
     if isinstance(data, ResultMessage):
         return data
-    
-    data = json.loads(data) 
+
+    data = json.loads(data)
     results = data["responseData"]["results"]
     result = results[random.randint(0, len(results) - 1)]
 
@@ -82,7 +82,7 @@ def random_image(msg, extras):
 
 @brain.startswith("유튜브")
 def random_youtube(msg, extras):
-    if not msg: 
+    if not msg:
         return random_youtube_info()
 
     data = _get_data(GOOGLE_Y_SEARCH_RESULT, GOOGLE_Y_SEARCH_URL.format(quote(msg), API_KEY), msg)
@@ -96,7 +96,3 @@ def random_youtube(msg, extras):
     result = results[random.randint(0, len(results) - 1)]
 
     return "http://youtu.be/{0}".format(result["id"]["videoId"])
-
-
-
-

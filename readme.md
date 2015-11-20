@@ -9,7 +9,7 @@ This framework can be attached to many different bot implementation.
 
 Official facebook page : http://fb.com/chunsab
 
-Chunsabot is written in Python. 
+Chunsabot is written in Python.
 
 (Tested in Python 3, I recently migrated it from Python 2 to Python 3, so I don't guarantee that Python 2 will work).
 
@@ -65,14 +65,14 @@ You can make a bot implementation via modifying bot.py. Doing this, you can make
 ```
 TBA
 ```
-3. 
+3.
 
 Adding new modules (Bot Developer)
 --------------------------------------------
 
 Chunsabot's Botlogic uses routing system to process different modules.
 
-You can create new python file to `modules` directory and write the bot logic script. 
+You can create new python file to `modules` directory and write the bot logic script.
 
 Below is an example code.
 
@@ -143,12 +143,12 @@ it is now deprecated.
 *We don't have to create config.py but configmaker does it for you.*
 
 |   keys for config   | type |   description                                                        |
-----------------------|------|----------------------------------------------------------------------| 
+----------------------|------|----------------------------------------------------------------------|
 |      curse_map      | list |  Collection of words which should be filtered.                       |
 |  debug_allowed_room | list |  Collection of rooms which should accept messages during debug mode. |
 |  debug_mode         | bool |  Switch for "debug mode".                                            |
 |  debug_users        | list |  Collection of users allowing "debug command". (starts with @)       |
-|  leave              | str  |  Keyword for force bot to leave the room. (Telegram unsupported)     | 
+|  leave              | str  |  Keyword for force bot to leave the room. (Telegram unsupported)     |
 |  sensitive_map      | list |  Collection of words which should be applied only in the room where executed the learn command. |
 |  weather_url_all    | str  |  KMA Weather API URL                                                 |
 |  google_api_key     | str  |  Google API Key for searching images and YouTube.                    |

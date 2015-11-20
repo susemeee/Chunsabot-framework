@@ -42,7 +42,7 @@ class Chunsa:
         self.check_warning = check_warning
         self.sync = sync
 
-        self.th_profile = None    
+        self.th_profile = None
 
         if not sync:
             self.th_process_pool = None
@@ -85,7 +85,7 @@ class Chunsa:
             file_path = os.path.join(Botlogic.__temppath__, the_file)
             if os.path.isfile(file_path):
                 os.unlink(file_path)
-    
+
     def image_ready(self, room_id, user_id):
         return self.brain.image_ready(room_id, user_id)
 
@@ -95,7 +95,7 @@ class Chunsa:
     def write(self, msg, peer):
         if type(msg) is str:
             msg = ResultMessage(msg, peer=peer)
-            
+
         self.add_result_msg(msg)
 
     def add_result_msg(self, msg):
@@ -132,7 +132,7 @@ class Chunsa:
     def init_process(self):
         if not self.th_profile and not profiling and not self.debug_mode:
             self.run_async_status = True
-            self.th_profile = Thread(target=self.async_status)  
+            self.th_profile = Thread(target=self.async_status)
             self.th_profile.start()
             pass
         if not self.th_process_pool:
@@ -144,7 +144,7 @@ class Chunsa:
         else:
             timeout = True
 
-        if not self_reconn:      
+        if not self_reconn:
             #count thread start
             self.init_process()
             #msg process start
@@ -211,7 +211,7 @@ class Chunsa:
         if not self.debug_mode or room_id in self.debug_allowed_room or self.profiling:
             if attachment:
                 resp = brain.translate_attachment(msg)
-            #not processing messages if is too long               
+            #not processing messages if is too long
             elif msg.text.startswith(".") and len(msg.text) < 1000:
                 resp = brain.translate(msg.text, msg)
             else:
@@ -223,13 +223,13 @@ class Chunsa:
                 if type(resp) is str:
                     if resp == self.__leave__:
                         resp = ResultMessage(resp, content_type=ContentType.Leave)
-                    else:                        
+                    else:
                         resp = ResultMessage(resp, content_type=ContentType.Text)
 
                 #[NAME] keyword conversion
                 if resp.content_type == ContentType.Text:
                     resp.content = resp.content.replace(u"[NAME]", msg.user_name)
-                
+
                 # exit before sync process returning
                 if resp.content_type == ContentType.Exit:
                     if self.sync:
@@ -274,7 +274,7 @@ class profile_logic:
 
     def end(self):
         if self.profiling:
-            rt = (time.time() - self.t)*1000                            
+            rt = (time.time() - self.t)*1000
             print(str(rt) + "ms")
             if rt > 10:
                 print("Request : "+msg)
@@ -282,6 +282,3 @@ class profile_logic:
                 if rt > 100:
                     import pdb
                     pdb.set_trace()
-
-
-

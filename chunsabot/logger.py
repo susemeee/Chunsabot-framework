@@ -23,14 +23,14 @@ class Logger:
 
         path = os.path.join(real_path, "data/logs")
         room_path = os.path.join(real_path, "data/room_logs")
-        
+
         if store_file:
             if not os.path.isdir(path):
                 os.makedirs(path)
-            
+
             fh_main = logging.FileHandler(filename=os.path.join(path, u'chat-{0}.log').format(start_time), mode='w')
             fh_main.setFormatter(formatter)
-        
+
         if store_alt_file:
             if not os.path.isdir(room_path):
                 os.makedirs(path)
@@ -41,16 +41,16 @@ class Logger:
         #handlers for console
         console = logging.StreamHandler()
         console.setLevel(logging.INFO)
-        
+
         #assigning handlers for logger
         main = logging.getLogger('bot')
         alt = logging.getLogger('bot_alt')
         main.addHandler(console)
-        
+
         if store_file:
             main.addHandler(fh_main)
 
-        if store_alt_file:           
+        if store_alt_file:
             alt.addHandler(fh_alt)
 
         main.setLevel(logging.DEBUG)

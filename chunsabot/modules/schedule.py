@@ -31,14 +31,14 @@ class SharedScheduler:
         #merging 'RoomLog' procedure and schedule objects
         from lib.logger import Logger
         self.pool.apply_async(self.process_main, (rooms, Logger.altLogger()))
-        
+
     def save_object(self):
         Database.save_object(SharedScheduler.__filepath__, self.process_list)
 
     def schedule(self, room_id, function, start=None, interval=None):
         assert(type(start) is 'datetime' or 'NoneType')
         assert(type(interval) is 'timedelta' or 'NoneType')
-        
+
         s = Schedule(room_id, function, start)
         self.process_list.append(s)
 
