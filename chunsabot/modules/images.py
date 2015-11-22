@@ -27,15 +27,17 @@ def add_image_description(msg, extras):
     img = shutil.move(attachment, path)
     img_folder = os.path.dirname(img)
 
-    result = subprocess.call(
-        "th {}/eval.lua -model {} -gpuid -1 -image_folder {} -batch_size 1"\
-        .format(RNN_PATH, MODEL_PATH, img_folder)
-    )
-    os.rmdir(img_folder)
+    result = subprocess.Popen(
+        "th eval.lua -model {} -gpuid -1 -image_folder {} -batch_size 1"\
+        .format(MODEL_PATH, img_folder).split(" "),
+        cwd=RNN_PATH
+    ).wait()
+
+    shutil.rmtree(img_folder)
 
     result_message = None
-    with open(os.path.join(result, "vis/vis.json"), 'r') as output:
-        json_output = json.loads(output)
+    with open(os.path.join(RNN_PATH, "vis/vis.json"), 'r') as output:
+        json_output = json.loads(output.read())
         result_message = json_output[0]['caption']
 
     return result_message
