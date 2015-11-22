@@ -13,7 +13,6 @@ from chunsabot.messages import Message, ResultMessage, ContentType
 from chunsabot.logger import Logger
 from chunsabot.database import Database
 from chunsabot.modules.learn import Learnlogic
-from chunsabot.modules.mafia import Mafiagame, MafiaRoom
 
 __regex__ = type(re.compile(''))
 
