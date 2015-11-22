@@ -30,7 +30,7 @@ if __name__ == "__main__":
 
     parser.add_argument('--make-initial-config', dest='initial_config', action='store_true', default=True,
                        help='Making initial config for Chunsabot')
-                       
+
     if main():
         exit(0)
 else:
@@ -110,8 +110,7 @@ else:
                 peer = msg.dest
 
             if msg.media and msg.media['type'] == 'photo':
-                if ch.image_ready(peer.id, _by.id):
-                    msg.load_photo(lambda success, file_path: file_cb(success, file_path, peer=peer, msg=msg))
+                msg.load_photo(lambda success, file_path: file_cb(success, file_path, peer=peer, msg=msg))
             else:
                 r = ch.process_msg(_make_message(msg, peer, _by))
                 if r:

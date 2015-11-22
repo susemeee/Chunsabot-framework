@@ -86,9 +86,6 @@ class Chunsa:
             if os.path.isfile(file_path):
                 os.unlink(file_path)
 
-    def image_ready(self, room_id, user_id):
-        return self.brain.image_ready(room_id, user_id)
-
     def writewrapper(self):
         return {"cwrite" : self.cwrite, "write" : self.write, "leave" : self.leave}
 
@@ -210,12 +207,16 @@ class Chunsa:
 
         if not self.debug_mode or room_id in self.debug_allowed_room or self.profiling:
             if attachment:
-                resp = brain.translate_attachment(msg)
-            #not processing messages if is too long
-            elif msg.text.startswith(".") and len(msg.text) < 1000:
-                resp = brain.translate(msg.text, msg)
+                resp = brain.translate_attachment(msg.text, msg)
+            elif msg.text:
+                #not processing messages if is too long
+                if msg.text.startswith(".") and len(msg.text) < 1000:
+                    resp = brain.translate(msg.text, msg)
+                else:
+                    resp = brain.translate_not_command(msg.text, msg)
             else:
-                resp = brain.translate_not_command(msg)
+                resp = None
+                self.logger.warning("New types of message {}".format(msg))
 
             assert(type(resp) is str or resp is None or isinstance(resp, ResultMessage))
 

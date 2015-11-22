@@ -94,9 +94,6 @@ class Botlogic:
         if not self.debug:
             return Botlogic.hello()
 
-    def image_ready(self, room_id, user_id):
-        return self.learn.is_image_waiting(room_id, user_id)
-
     def leave(self, room_id):
         self.logger.info("left from {0}".format(str(room_id)))
         del self.rooms[room_id]
@@ -230,108 +227,9 @@ class Botlogic:
             p = Thread(target=process)
             p.start()
 
-    def translate_mafia_room(self, room_id, room_name, peer):
-        try:
-            room_name = room_name.split("#")[0]
-            rn = room_name.split("@")
-            cu_room_id = rn[1]
-            cu_room_name = rn[0]
-            mafia = self.rooms[int(cu_room_id)].mafia
-            if mafia and mafia.start:
-                if cu_room_name in Mafiagame.__mafia__:
-                    if not mafia.room_mafia:
-                        mafia.room_mafia = MafiaRoom(room_id, peer)
-                        return Mafiagame.m_mafia_init
-
-                elif cu_room_name in Mafiagame.__doctor__:
-                    if not mafia.room_doc:
-                        mafia.room_doc = MafiaRoom(room_id, peer)
-                        return Mafiagame.m_doc_init
-
-                elif cu_room_name in Mafiagame.__police__:
-                    if not mafia.room_pol:
-                        mafia.room_pol = MafiaRoom(room_id, peer)
-                        return Mafiagame.m_pol_init
-                else:
-                    return True
-            else:
-                # ignoring if invalid room_id
-                return False
-        except (KeyError, IndexError, ValueError):
-            return False
-
-    def translate_not_command(self, msg):
-        """
-            Processing messages without dot if applicable.
-            Currently used for Verify_url class.
-        """
-        room_id = msg.room_id
-        user_id = msg.user_id
-
-        room_name = msg.peer.name.replace("_", " ")
-
-        # Registering mafia room
-        if Mafiagame.mafia_match(room_name):
-            m_result = self.translate_mafia_room(room_id, room_name, msg.peer)
-            if m_result:
-                if m_result == True:
-                    return None
-                else:
-                    return m_result
-            else:
-                self.sockets.logger.warning("Invalid MafiaRoom {0}".format(room_name))
-
-        if room_id not in self.rooms:
-            r = self.new_room(room_id)
-            if r:
-                return r
-
-        # pretty rough ideas to distinguish between private chat and group chat.
-        # It seems to be quite a not bad idea since it is a comparison between 'one' and 'not-one'.
-        room = self.rooms[room_id]
-        if user_id not in room.members:
-            room.members.append(user_id)
-
-
-    def translate_attachment(self, msg):
-        """
-            Processing attachments, in this case, images.
-        """
-        image_url = msg.attachment
-        return self.learn.save_image(image_url, msg)
-
-
-    def translate(self, msg, extras):
-        """
-            Getting messages from sockets and processes it
-            Everything goes into extras
-            (room_id, user_id, user_name)
-        """
-        # truncating initial dot (.)
-        assert(msg.startswith("."))
-        msg = msg[1:]
-
-        room_id = extras.room_id
-        user_id = extras.user_id
-        if room_id not in self.rooms:
-            self.new_room(room_id)
-
-        extras = {
-            "room" : self.rooms[room_id],
-            "user_id" : user_id,
-            "room_id" : room_id,
-            "user_name" : extras.user_name,
-            "peer" : extras.peer,
-            "by" : extras.by
-        }
-
-        if msg.startswith(u"@") and user_id in self.sockets.debug_users:
-            return self.translate_debug(msg, extras)
-
-        if u"수호천사" in msg:
-            return u"ㅎ(부끄)"
-        elif msg.startswith(u"안녕"):
-            return "안녕하세요~(부끄)"
+    def _route(self, msg, extras, modules=None):
+        if not modules:
+            modules = self.modules
 
         splited_msg = msg.split(" ", 1)
         command = splited_msg[0]
@@ -340,11 +238,11 @@ class Botlogic:
         else:
             extra_cmd = None
 
-        match = False
         #routing to modules
-        for module in self.modules:
+        match = False
+        for module in modules:
             target_cmd = module['target']
-            if module['extras']['disable_when_silence'] and self.rooms[room_id].silence:
+            if module['extras']['disable_when_silence'] and self.rooms[extras['room_id']].silence:
                 pass
             else:
                 if isinstance(target_cmd, str):
@@ -373,6 +271,88 @@ class Botlogic:
                     else:
                         return module['func'](extra_cmd, extras)
 
+    def _generate_extras(self, extras):
+        dic = {
+            "room" : self.rooms[extras.room_id],
+            "user_id" : extras.user_id,
+            "room_id" : extras.room_id,
+            "user_name" : extras.user_name,
+            "peer" : extras.peer,
+            "by" : extras.by
+        }
+        if extras.attachment:
+            dic['attachment'] = extras.attachment
+
+        return dic
+
+    def translate_not_command(self, msg, extras):
+        """
+            Processing messages without dot if applicable.
+            Currently used for Verify_url class.
+        """
+        room_id = extras.room_id
+        user_id = extras.user_id
+
+        room_name = extras.peer.name.replace("_", " ")
+
+        if room_id not in self.rooms:
+            r = self.new_room(room_id)
+            if r:
+                return r
+
+        # pretty rough ideas to distinguish between private chat and group chat.
+        # It seems to be quite a not bad idea since it is a comparison between 'one' and 'not-one'.
+        room = self.rooms[room_id]
+        if user_id not in room.members:
+            room.members.append(user_id)
+
+
+
+    def translate_attachment(self, msg, extras):
+        """
+            Processing attachments, in this case, images.
+        """
+        # If image is an initial message
+        if extras.room_id not in self.rooms:
+            r = self.new_room(extras.room_id)
+
+        image_url = extras.attachment
+        result = self.learn.save_image(image_url, extras)
+        if result:
+            return result
+        else:
+            print("asdf")
+            return self._route("@image", self._generate_extras(extras))
+
+
+    def translate(self, msg, extras):
+        """
+            Getting messages from sockets and processes it
+            Everything goes into extras
+            (room_id, user_id, user_name)
+        """
+        # truncating initial dot (.)
+        assert(msg.startswith("."))
+        msg = msg[1:]
+
+        room_id = extras.room_id
+        user_id = extras.user_id
+        if room_id not in self.rooms:
+            self.new_room(room_id)
+
+        extras = self._generate_extras(extras)
+
+        if msg.startswith(u"@") and user_id in self.sockets.debug_users:
+            return self.translate_debug(msg, extras)
+
+        if u"수호천사" in msg:
+            return u"ㅎ(부끄)"
+        elif msg.startswith(u"안녕"):
+            return "안녕하세요~(부끄)"
+
+        result = self._route(msg, extras)
+        if result:
+            return result
 
         if not self.rooms[room_id].silence:
             try:
