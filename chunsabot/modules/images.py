@@ -27,7 +27,7 @@ def add_image_description(msg, extras):
     img = shutil.move(attachment, path)
     img_folder = os.path.dirname(img)
 
-    result = subprocess.run(
+    result = subprocess.call(
         "th {}/eval.lua -model {} -gpuid -1 -image_folder {} -batch_size 1"\
         .format(RNN_PATH, MODEL_PATH, img_folder)
     )
