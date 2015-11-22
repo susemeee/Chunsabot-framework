@@ -20,7 +20,7 @@ def add_image_description(msg, extras):
     if not attachment:
         return None
 
-    path = os.path.join(brain.__temppath__, id_generator(), 'image_processing')
+    path = os.path.join(brain.__temppath__, "{}_{}".format(id_generator(), 'image_processing'))
     if not os.path.isdir(path):
         os.mkdir(path)
     # Moving to temp path
