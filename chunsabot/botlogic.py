@@ -214,9 +214,10 @@ class Botlogic:
             return u"{0}".format(extras["room_id"])
         elif msg == u"@PI":
             from chunsabot.pi import PI
+            import time
             t = time.time()
             result = PI.calculate()
-            return unicode(result)+u"\r\nTook {0} ms".format((time.time() - t)*1000)
+            return str(result)+u"\r\nTook {0} ms".format((time.time() - t)*1000)
         elif msg == u"@Asynctest":
             import time
             def process():
