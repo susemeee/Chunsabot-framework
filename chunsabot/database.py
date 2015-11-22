@@ -53,7 +53,7 @@ class Database(dict):
         print("Config load succeeded.")
     except IOError:
         cfg_object = {}
-        print(u"/data/config.yaml 파일이 존재하지 않습니다. \nbot.py --make-initial-config로 설정 파일을 만들어 주세요.")
+        print("/data/config.yaml 파일이 존재하지 않습니다. \nbot.py --make-initial-config로 설정 파일을 만들어 주세요.")
 
     @staticmethod
     def mkdir():
@@ -167,7 +167,7 @@ class Database(dict):
             if ignore_when_noexist:
                 pass
             else:
-                print(u"config.yaml에 누락된 값이 있습니다. {0}".format(e))
+                print("config.yaml에 누락된 값이 있습니다. {0}".format(e))
                 raise KeyError(e)
 
     @staticmethod
