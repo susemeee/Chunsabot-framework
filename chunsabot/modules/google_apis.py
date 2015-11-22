@@ -15,7 +15,9 @@ API_KEY = Database.load_config("google_api_key")
 GOOGLE_Y_SEARCH_RESULT = "GoogleYouTube"
 GOOGLE_Y_SEARCH_URL = "https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=8&type=video&q={0}&key={1}"
 GOOGLE_IMG_SEARCH_RESULT = "GoogleImage"
-GOOGLE_IMG_SEARCH_URL = "http://ajax.googleapis.com/ajax/services/search/images?v=1.0&rsz=5&q={0}&imgsz=small|medium|large&key={1}"
+GOOGLE_IMG_SEARCH_URL = "http://ajax.googleapis.com/ajax/services/search/images?v=1.0&rsz=8&q={0}&imgsz=small|medium|large&key={1}"
+
+exhausted = {}
 
 def _hash(url):
     return "{0}".format(hashlib.sha256(url.encode('utf-8')).hexdigest()[:16])
@@ -30,7 +32,7 @@ def _send_photos_from_url(url):
                 f.write(r.content)
                 f.flush()
         else:
-            return ResultMessage("이미지 다운로드 오류 ({0})".format(r.status_code))
+            return False
 
     real_path = "{0}.{1}".format(path, imghdr.what(path))
     os.rename(path, real_path)
@@ -69,16 +71,37 @@ def random_image(msg, extras):
     if not msg:
         return random_image_info()
 
-    data = _get_data(GOOGLE_IMG_SEARCH_RESULT, GOOGLE_IMG_SEARCH_URL.format(quote(msg), API_KEY), msg)
+    if msg not in exhausted:
+        exhausted[msg] = []
 
-    if isinstance(data, ResultMessage):
-        return data
+    while True:
+        data = _get_data(GOOGLE_IMG_SEARCH_RESULT, GOOGLE_IMG_SEARCH_URL.format(quote(msg), API_KEY), msg)
 
-    data = json.loads(data)
-    results = data["responseData"]["results"]
-    result = results[random.randint(0, len(results) - 1)]
+        if isinstance(data, ResultMessage):
+            return data
 
-    return _send_photos_from_url(result["url"])
+        data = json.loads(data)
+        results = data["responseData"]["results"]
+        success = None
+        while True:
+            if len(exhausted[msg]) >= len(results):
+                # TODO We've used all of data. should fetch new.
+                exhausted[msg] = []
+                print("ImageFetcher : Used all of images.")
+                break
+
+            result = results[random.randint(0, len(results) - 1)]
+            if result not in exhausted[msg]:
+                success = _send_photos_from_url(result["url"])
+                if success:
+                    break
+                else:
+                    exhausted[msg].append(result)
+                    print("ImageFetcher : Failsafe activated.")
+
+        if success:
+            return success
+
 
 @brain.startswith("유튜브")
 def random_youtube(msg, extras):
