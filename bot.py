@@ -30,15 +30,7 @@ if __name__ == "__main__":
 
     parser.add_argument('--make-initial-config', dest='initial_config', action='store_true', default=True,
                        help='Making initial config for Chunsabot')
-    # parser.add_argument('--no-warning', dest='warn', action='store_false', default=True,
-    #                    help='Turns off warning filter')
-    # parser.add_argument('-s', dest='hello', action='store_false', default=True,
-    #                    help='Slient mode (No initial response when entered new room)')
-    # parser.add_argument('-p', dest='profile', action='store_true', default=False,
-    #                    help='Profile mode')
-    # parser.add_argument('--disable-logs', dest='logs', action='store_false', default=True,
-    #                     help='Disables logging room when true')
-
+                       
     if main():
         exit(0)
 else:
