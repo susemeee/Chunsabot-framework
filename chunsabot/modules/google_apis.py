@@ -71,37 +71,37 @@ def random_image(msg, extras):
     if not msg:
         return random_image_info()
 
-    if msg not in exhausted:
-        exhausted[msg] = []
 
+    exhausted[msg] = []
+
+    data = _get_data(GOOGLE_IMG_SEARCH_RESULT, GOOGLE_IMG_SEARCH_URL.format(quote(msg), API_KEY), msg)
+
+    if isinstance(data, ResultMessage):
+        return data
+
+    data = json.loads(data)
+    results = data["responseData"]["results"]
+    success = None
     while True:
-        data = _get_data(GOOGLE_IMG_SEARCH_RESULT, GOOGLE_IMG_SEARCH_URL.format(quote(msg), API_KEY), msg)
+        if len(exhausted[msg]) >= len(results):
+            # TODO We've used all of data. should fetch new.
+            exhausted[msg] = []
+            print("ImageFetcher : Used all of images.")
+            break
 
-        if isinstance(data, ResultMessage):
-            return data
-
-        data = json.loads(data)
-        results = data["responseData"]["results"]
-        success = None
-        while True:
-            if len(exhausted[msg]) >= len(results):
-                # TODO We've used all of data. should fetch new.
-                exhausted[msg] = []
-                print("ImageFetcher : Used all of images.")
+        result = results[random.randint(0, len(results) - 1)]
+        if result not in exhausted[msg]:
+            success = _send_photos_from_url(result["url"])
+            if success:
                 break
+            else:
+                exhausted[msg].append(result)
+                print("ImageFetcher : Failsafe activated.")
 
-            result = results[random.randint(0, len(results) - 1)]
-            if result not in exhausted[msg]:
-                success = _send_photos_from_url(result["url"])
-                if success:
-                    break
-                else:
-                    exhausted[msg].append(result)
-                    print("ImageFetcher : Failsafe activated.")
-
-        if success:
-            return success
-
+    if success:
+        return success
+    else:
+        return ResultMessage("이미지 다운로드 오류.")
 
 @brain.startswith("유튜브")
 def random_youtube(msg, extras):
