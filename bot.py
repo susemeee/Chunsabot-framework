@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
@@ -10,145 +10,10 @@ Chunsabot is following MIT License. (check LICENSE)
 
 """
 
+import telepot
 
-def main():
-    print("Type bot.py -h to check extra arguments")
-    res = parser.parse_args()
+from chunsabot.database import Database
+API_KEY = Database.load_config('telegram_api_key')
 
-    if res.initial_config:
-        from chunsabot.configmaker import make_initial_config
-        make_initial_config()
-    else:
-        print("Usage : ./telegram-cli -Z bot.py")
-
-    return True
-
-if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser(description='Chunsabot main framework')
-
-    parser.add_argument('--make-initial-config', dest='initial_config', action='store_true', default=True,
-                       help='Making initial config for Chunsabot')
-
-    if main():
-        exit(0)
-else:
-    import tgl
-    import os
-    from chunsabot.chunsa import Chunsa
-    from chunsabot.messages import Message, ContentType
-
-    real_path = os.path.realpath(__file__)
-    real_path = real_path[:real_path.rfind("/")]
-
-    ch = Chunsa(real_path=real_path, sync=True)
-
-    my_peer = None
-    our_id = 0
-    binlog_done = False
-
-    def _make_message(msg, peer, _by, attachment=None):
-        return Message(room_id=peer.id,
-            user_id=_by.id,
-            user_name=_by.name.replace("_", " "),
-            text=msg.text,
-            datetime=msg.date,
-            attachment=attachment,
-            peer=peer,
-            by=_by)
-
-    def _on_close():
-        tgl.safe_exit(0)
-
-    def _cwrite(peer_list, name="", messages=""):
-        # some trick to create chat room with 1 member
-        if len(peer_list) > 0:
-            while len(peer_list) < 3:
-                peer_list.append(peer_list[0])
-
-        r = tgl.create_group_chat(peer_list, name)
-
-    ch.cwrite = _cwrite
-    ch.on_close = _on_close
-
-    def empty_cb(success):
-        pass
-
-    def msg_cb(success, msg, by=None):
-        if by == "photo":
-            ch.remove_temp_dir()
-
-    def file_cb(success, file_path, peer=None, msg=None):
-        r = ch.process_msg(_make_message(msg, peer, msg.src, attachment=file_path))
-        peer.send_msg(r.content)
-
-    def on_binlog_replay_end():
-        binlog_done = True
-
-    def on_get_difference_end():
-        pass
-
-    def on_our_id(id):
-        global our_id
-        our_id = id
-        return "Set ID: " + str(our_id)
-
-    def on_msg_receive(msg):
-        global our_id
-
-        try:
-            if msg.out and not binlog_done:
-                return
-
-            _by = msg.src
-            if msg.dest.id == our_id:
-                # direct message
-                peer = msg.src
-            else:
-                # chatroom
-                peer = msg.dest
-
-            if msg.media and msg.media['type'] == 'photo':
-                msg.load_photo(lambda success, file_path: file_cb(success, file_path, peer=peer, msg=msg))
-            else:
-                r = ch.process_msg(_make_message(msg, peer, _by))
-                if r:
-                    peer.mark_read(empty_cb)
-                    if r.content_type == ContentType.Text:
-                        peer.send_msg(r.content)
-                    elif r.content_type == ContentType.Image:
-                        peer.send_photo(r.content, lambda success, msg : msg_cb(success, msg, by="photo"))
-
-
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-
-    def on_secret_chat_update(peer, types):
-        return "on_secret_chat_update"
-
-    def on_user_update(peer, what):
-        pass
-
-    def on_chat_update(peer, what):
-        pass
-
-    def on_loop():
-        # processing message stored in queue
-        while not ch.msg_result_queue.empty():
-            r = ch.msg_result_queue.get()
-            if r.peer:
-                r.peer.send_msg(r.content)
-            else:
-                print("Got async message but r.peer not set.")
-
-    # Set callbacks
-    tgl.set_on_binlog_replay_end(on_binlog_replay_end)
-    tgl.set_on_get_difference_end(on_get_difference_end)
-    tgl.set_on_our_id(on_our_id)
-    tgl.set_on_msg_receive(on_msg_receive)
-    tgl.set_on_secret_chat_update(on_secret_chat_update)
-    tgl.set_on_user_update(on_user_update)
-    tgl.set_on_chat_update(on_chat_update)
-    tgl.set_on_loop(on_loop)
+bot = telepot.Bot(API_KEY)
+print(bot.getMe())
