@@ -21,23 +21,20 @@ class Room:
         return "<Room>\r\nMembers : {3}\r\nMafiagame : {0}\r\nUpanddown : {1}\r\nSilence : {2}\r\n".\
         format(self.mafia, self.upanddown, self.silence, self.members)
 
-    def __init__(self, debug=False):
-        self.debug = debug
+    def __init__(self, is_personal):
         self.mafia = None
         self.silence = None
         self.upanddown = { 'num' : -1, 'start' : False }
         self.god_list = []
         self.members = []
+        self.personal = is_personal
 
     def is_personal(self):
-        if not self.debug and len(self.members) < 2:
-            return True
-        else:
-            return False
+        return self.personal
 
 class Botlogic:
-    __version__ = "20150614"
-    __intversion__ = "1.0.0"
+    __version__ = "20160117"
+    __intversion__ = "2.0.0"
     __roompath__ = "data/room_saved"
     __temppath__ = "data/temp/"
     __leave__ = Database.load_config("leave")
@@ -88,9 +85,12 @@ class Botlogic:
     def save_rooms(self):
         Database.save_object(Botlogic.__roompath__, self.rooms)
 
-    def new_room(self, room_id):
+    def new_room(self, extras):
+        room_id = extras.room_id
+        is_private_chat = extras.is_private_chat
+
         self.logger.info("joined from {0}".format(str(room_id)))
-        self.rooms[room_id] = Room(debug=self.debug)
+        self.rooms[room_id] = Room(is_personal=is_private_chat)
 
         if not self.debug:
             return Botlogic.hello()
@@ -296,17 +296,9 @@ class Botlogic:
         user_id = extras.user_id
 
         if room_id not in self.rooms:
-            r = self.new_room(room_id)
+            r = self.new_room(extras)
             if r:
                 return r
-
-        # pretty rough ideas to distinguish between private chat and group chat.
-        # It seems to be quite a not bad idea since it is a comparison between 'one' and 'not-one'.
-        room = self.rooms[room_id]
-        if user_id not in room.members:
-            room.members.append(user_id)
-
-
 
     def translate_attachment(self, msg, extras):
         """
@@ -314,7 +306,7 @@ class Botlogic:
         """
         # If image is an initial message
         if extras.room_id not in self.rooms:
-            r = self.new_room(extras.room_id)
+            r = self.new_room(extras)
 
         image_url = extras.attachment
         result = self.learn.save_image(image_url, extras)
@@ -337,7 +329,7 @@ class Botlogic:
         room_id = extras.room_id
         user_id = extras.user_id
         if room_id not in self.rooms:
-            self.new_room(room_id)
+            self.new_room(extras)
 
         extras = self._generate_extras(extras)
 

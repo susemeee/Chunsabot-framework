@@ -48,7 +48,8 @@ class ChunsabotEndPoint(telepot.async.Bot):
             ),
             text=msg.get('text', ''),
             datetime=datetime.fromtimestamp(int(msg['date'])),
-            attachment=self.process_attachment(msg)
+            attachment=self.process_attachment(msg),
+            is_private_chat=chat.get('type', '') == 'private' if chat else False
         )
 
     @asyncio.coroutine

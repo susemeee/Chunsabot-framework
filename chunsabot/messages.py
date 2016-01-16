@@ -9,7 +9,7 @@ class ContentType(Enum):
     Exit = 999
 
 class Message:
-    def __init__(self, room_id, user_id, user_name, text, datetime, peer=None, by=None, attachment=None):
+    def __init__(self, room_id, user_id, user_name, text, datetime, peer=None, by=None, attachment=None, is_private_chat=False):
         # used for Mafiagame
         if peer:
             self.peer = peer
@@ -26,6 +26,7 @@ class Message:
         self.text = text
         self.datetime = datetime
         self.attachment = attachment
+        self.is_private_chat = is_private_chat
 
 
     def __repr__(self):
