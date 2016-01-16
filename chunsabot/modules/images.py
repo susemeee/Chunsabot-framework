@@ -14,7 +14,7 @@ MODEL_PATH = os.path.join(RNN_PATH, "models/checkpoint_v1.t7_cpu.t7")
 def id_generator(size=12, chars=string.ascii_lowercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 
-@brain.route("@image")
+# @brain.route("@image")
 def add_image_description(msg, extras):
     attachment = extras['attachment']
     if not attachment:
