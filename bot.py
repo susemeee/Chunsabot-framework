@@ -43,8 +43,8 @@ class ChunsabotEndPoint(telepot.async.Bot):
         return Message(room_id=rid,
             user_id=msg['from']['id'],
             user_name="{} {}".format(
-                msg['from']['first_name'],
-                msg['from']['last_name']
+                msg['from'].get('first_name', ''),
+                msg['from']('last_name', '')
             ),
             text=msg.get('text', ''),
             datetime=datetime.fromtimestamp(int(msg['date'])),
