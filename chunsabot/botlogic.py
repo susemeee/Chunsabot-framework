@@ -21,7 +21,8 @@ class Room:
         return "<Room>\r\nMembers : {3}\r\nMafiagame : {0}\r\nUpanddown : {1}\r\nSilence : {2}\r\n".\
         format(self.mafia, self.upanddown, self.silence, self.members)
 
-    def __init__(self):
+    def __init__(self, debug=False):
+        self.debug = debug
         self.mafia = None
         self.silence = None
         self.upanddown = { 'num' : -1, 'start' : False }
@@ -29,7 +30,7 @@ class Room:
         self.members = []
 
     def is_personal(self):
-        if len(self.members) < 2:
+        if not self.debug and len(self.members) < 2:
             return True
         else:
             return False
@@ -89,7 +90,7 @@ class Botlogic:
 
     def new_room(self, room_id):
         self.logger.info("joined from {0}".format(str(room_id)))
-        self.rooms[room_id] = Room()
+        self.rooms[room_id] = Room(debug=self.debug)
 
         if not self.debug:
             return Botlogic.hello()
@@ -294,8 +295,6 @@ class Botlogic:
         room_id = extras.room_id
         user_id = extras.user_id
 
-        room_name = extras.peer.name.replace("_", " ")
-
         if room_id not in self.rooms:
             r = self.new_room(room_id)
             if r:
@@ -322,7 +321,6 @@ class Botlogic:
         if result:
             return result
         else:
-            print("asdf")
             return self._route("@image", self._generate_extras(extras))
 
 
@@ -367,7 +365,13 @@ class Botlogic:
                     elif url == Learnlogic.__overload__:
                         return url
                     else:
-                        return ResultMessage(url, content_type=ContentType.Image)
+                        # Compatibility with legacy image
+                        if url.startswith("/"):
+                            ct = ContentType.Image
+                        else:
+                            ct = ContentType.ImageId
+
+                        return ResultMessage(url, content_type=ct)
                 else:
                     #msg_map
                     return self.learn.get_msg(msg, room_id)

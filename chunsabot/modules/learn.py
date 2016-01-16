@@ -98,15 +98,13 @@ class Learnlogic:
         self.image_map.delete(key)
 
     def save_image(self, image_url, extras):
-        if not image_url.endswith(Imagewait.image_ext):
-            return None
-        else:
-            room_id = extras.room_id
-            user_id = extras.user_id
+        # Image id or image path
+        room_id = extras.room_id
+        user_id = extras.user_id
 
-            key = self.is_image_waiting(room_id, user_id, delete=True)
-            if key:
-                self.image_map.save(key, image_url, room_id)
-                return u"이미지가 등록되었습니다! (윙크)"
-            else:
-                return None
+        key = self.is_image_waiting(room_id, user_id, delete=True)
+        if key:
+            self.image_map.save(key, image_url, room_id)
+            return u"이미지가 등록되었습니다! (윙크)"
+        else:
+            return None

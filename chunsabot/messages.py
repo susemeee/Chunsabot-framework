@@ -3,6 +3,8 @@ from enum import Enum
 class ContentType(Enum):
     Text = 100
     Image = 101
+    ImageId = 102
+    InputReady = 103
     Leave = 199
     Exit = 999
 

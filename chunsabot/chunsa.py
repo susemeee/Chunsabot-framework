@@ -223,23 +223,25 @@ class Chunsa:
             if resp:
                 if type(resp) is str:
                     if resp == self.__leave__:
-                        resp = ResultMessage(resp, content_type=ContentType.Leave)
+                        resp = ResultMessage(resp, content_type=ContentType.Leave, peer=msg.room_id)
                     else:
-                        resp = ResultMessage(resp, content_type=ContentType.Text)
+                        resp = ResultMessage(resp, content_type=ContentType.Text, peer=msg.room_id)
+                else:
+                    if not resp.peer:
+                        # Fail safe
+                        resp.peer = msg.room_id
 
-                #[NAME] keyword conversion
                 if resp.content_type == ContentType.Text:
+                    #[NAME] keyword conversion
                     resp.content = resp.content.replace(u"[NAME]", msg.user_name)
-
-                # exit before sync process returning
-                if resp.content_type == ContentType.Exit:
+                elif resp.content_type == ContentType.Exit:
+                    # exit before sync process returning
                     if self.sync:
                         self.close_sync_process()
                     else:
                         self.close_async_process()
-
-                if resp.content_type == ContentType.Leave:
-                    self.leave(room_id, peer=msg.peer)
+                elif resp.content_type == ContentType.Leave:
+                    self.leave(room_id, peer=msg.room_id)
 
                 if self.sync:
                     return resp
