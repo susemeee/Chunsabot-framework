@@ -64,9 +64,7 @@ def image_list(msg, extras):
         else:
             return u"[짤지우기]\r\n이 방에서 그런 단어는 배우지 않았습니다!"
 
-
-@brain.startswith(u"짤배우기", disable_when_silence=True)
-def process_image(msg, extras):
+def process_image(msg, extras, multiple=False):
     if extras['room'].is_personal():
         return u"[짤배우기]\r\n이 기능은 개인 대화에서 작동하지 않습니다."
 
@@ -76,21 +74,42 @@ def process_image(msg, extras):
 
         if msg == u"취소":
             # Delete logic
-            o_key = learn.is_image_waiting(room_id, user_id, delete=True)
-            if o_key:
-                return u"[짤배우기]\r\n[NAME]님의 대기중인 키워드 \"{0}\"이(가) 삭제되었습니다.".format(o_key)
+            iw = learn.is_image_waiting(room_id, user_id, delete=True)
+            if iw.key:
+                return u"[짤배우기]\r\n[NAME]님의 대기중인 키워드 \"{0}\"이(가) 삭제되었습니다.".format(iw.key)
             else:
                 return u"[짤배우기]\r\n[NAME]님의 대기중인 키워드가 없습니다."
 
-        key = learn.is_image_waiting(room_id, user_id)
-        if key:
-            return u"[짤배우기]\r\n현재 [NAME]님은 이 방에서 이미지 대기 중입니다. (키워드 {0})".format(key)
+        iw = learn.is_image_waiting(room_id, user_id)
+        if iw.key:
+            return u"[짤배우기]\r\n현재 [NAME]님은 이 방에서 이미지 대기 중입니다. (키워드 {0})".format(iw.key)
         else:
-            key = msg
-            learn.image_wait.append(Imagewait(room_id, user_id, key))
-            return u"[짤배우기]\r\n[NAME]님이 처음으로 올린 이미지가 적용됩니다!"
+            learn.image_wait.append(Imagewait(room_id, user_id, msg, multiple=multiple))
+
+            if not multiple:
+                return u"[짤배우기]\r\n[NAME]님이 처음으로 올린 이미지가 적용됩니다!"
+            else:
+                return u"[짤많이배우기]\r\n[NAME]님이 올린 이미지가 전부 적용됩니다. 10개가 넘는 이미지를 등록하거나 .짤그만을 입력하면 배우기가 완료됩니다."
     else:
         return info_image()
+
+@brain.route(u"짤그만")
+def process_image_end(msg, extras):
+    iw = learn.is_image_waiting(extras['room_id'], extras['user_id'], delete=True)
+    kw = "짤많이배우기" if iw.multiple else "짤배우기"
+    if iw.key:
+        return u"[{kw}]\r\n[NAME]님이 올린 사진 {cnt}장이 등록되었습니다.".format(kw=kw, cnt=iw.count - 1)
+    else:
+        return u"[{kw}]\r\n[NAME]님은 .{kw}를 입력하지 않으셨습니다.".format(kw=kw)
+
+
+@brain.startswith(u"짤많이배우기", disable_when_silence=True)
+def process_image_multi(msg, extras):
+    return process_image(msg, extras, multiple=True)
+
+@brain.startswith(u"짤배우기", disable_when_silence=True)
+def process_image_single(msg, extras):
+    return process_image(msg, extras)
 
 #배우기 나, 너
 #나, 너

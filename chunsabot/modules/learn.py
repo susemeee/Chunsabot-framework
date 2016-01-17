@@ -6,11 +6,18 @@ import time
 
 class Imagewait:
     image_ext = (u'jpg', u'jpeg', u'png', u'bmp', u'gif', u'svg', u'tif', u'tga')
+    multiple_cnt = 10
 
-    def __init__(self, r, u, k):
+    def __init__(self, r, u, k, multiple=False):
         self.room_id = r
         self.user_id = u
         self.key = k
+        self.multiple = multiple
+        self.count = 0
+
+    @property
+    def max(self):
+        return self.multiple_cnt if self.multiple else 1
 
 initialized_once = False
 
@@ -51,11 +58,13 @@ class Learnlogic:
     def is_image_waiting(self, room_id, user_id, delete=False):
         for i in self.image_wait:
             if i.room_id == room_id and i.user_id == user_id:
-                if delete:
+                if i.count + 1 >= i.max or delete:
                     self.image_wait.remove(i)
-                return i.key
-        return False
 
+                i.count += 1
+                return i
+
+        return Imagewait(None, None, None)
 
     def add_curse(self, msg):
         self.curse_map.append(msg)
@@ -102,9 +111,19 @@ class Learnlogic:
         room_id = extras.room_id
         user_id = extras.user_id
 
-        key = self.is_image_waiting(room_id, user_id, delete=True)
-        if key:
-            self.image_map.save(key, image_url, room_id)
-            return u"이미지가 등록되었습니다! (윙크)"
+        iw = self.is_image_waiting(room_id, user_id)
+
+        if iw.key:
+            if iw.count > Imagewait.multiple_cnt:
+                return None
+            else:
+                if iw.multiple or iw.count < Imagewait.multiple_cnt:
+                    self.image_map.save(iw.key, image_url, room_id)
+
+                    s = " ({} / {})".format(
+                                iw.count,
+                                Imagewait.multiple_cnt
+                            ) if iw.multiple else ""
+                    return u"이미지가 등록되었습니다!{}".format(s)
         else:
             return None
