@@ -87,7 +87,7 @@ class ChunsabotEndPoint(telepot.async.Bot):
                     open(r.content, 'rb'),
                     caption=p_msg.text
                 )
-                ch.register_file_id(file_id)
+                # ch.register_file_id(file_id)
             elif r.content_type == ContentType.ImageId:
                 yield from self.sendPhoto(
                     r.peer,
