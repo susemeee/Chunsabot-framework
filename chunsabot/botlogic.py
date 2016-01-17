@@ -229,6 +229,8 @@ class Botlogic:
             from threading import Thread
             p = Thread(target=process)
             p.start()
+        elif msg == u"@id":
+            return str(extras['room_id'])
 
     def _route(self, msg, extras, modules=None):
         if not modules:
