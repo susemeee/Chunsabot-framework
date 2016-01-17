@@ -21,7 +21,8 @@ class Room:
         return "<Room>\r\nMembers : {3}\r\nMafiagame : {0}\r\nUpanddown : {1}\r\nSilence : {2}\r\n".\
         format(self.mafia, self.upanddown, self.silence, self.members)
 
-    def __init__(self, is_personal):
+    def __init__(self, is_personal, debug):
+        self.debug = debug
         self.mafia = None
         self.silence = None
         self.upanddown = { 'num' : -1, 'start' : False }
@@ -30,7 +31,7 @@ class Room:
         self.personal = is_personal
 
     def is_personal(self):
-        return self.personal
+        return not self.debug and self.personal
 
 class Botlogic:
     __version__ = "20160117"
@@ -90,7 +91,7 @@ class Botlogic:
         is_private_chat = extras.is_private_chat
 
         self.logger.info("joined from {0}".format(str(room_id)))
-        self.rooms[room_id] = Room(is_personal=is_private_chat)
+        self.rooms[room_id] = Room(is_personal=is_private_chat, debug=self.debug)
 
         if not self.debug:
             return Botlogic.hello()

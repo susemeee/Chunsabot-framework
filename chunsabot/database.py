@@ -14,6 +14,8 @@ try:
 except:
     import pickle
 
+from collections import Counter
+
 DB_Create_query = u"CREATE TABLE IF NOT EXISTS {0}(\
     k VARCHAR(100) NOT NULL,\
     v VARCHAR(100) NOT NULL);"
@@ -107,11 +109,9 @@ class Database(dict):
         assert(type(room) is int)
 
         Database.c.execute("SELECT * FROM `{0}` WHERE room_id='{1}'".format(self.name, room))
-
         row_array = Database.c.fetchall()
 
-        return [r[0] for r in row_array].__repr__()
-
+        return Counter([r[0] for r in row_array]).most_common().__repr__()
 
     def save(self, key, value, room=None):
         key = key.replace("'", "''")
