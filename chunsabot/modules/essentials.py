@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import asyncio
 import random
 import re
 from chunsabot.botlogic import brain
@@ -78,7 +79,6 @@ def dorandom(msg, extras):
 # 4면체
 @brain.startswith(u"주사위")
 def dice(msg, extras):
-
     def intfromstr(s):
         try:
             return int("".join(re.findall(r'\d', s)))
@@ -98,32 +98,12 @@ def dice(msg, extras):
     return u"[주사위 (1~{1})]\r\n[NAME]님이 굴린 주사위의 결과는 [{0}] 입니다!".format(str(dice), str(n))
 
 
-@brain.startswith(u"갓")
-def p_god(msg, extras):
-    room_id = extras['room_id']
+@brain.route(re.compile("^갓([가-힣]|\w){1,20}$"))
+def p_god(msg, extra_msg, extras):
+    @asyncio.coroutine
+    def printmsg(li):
+        for char in li:
+            asyncio.async(brain.sockets.write(extras['room_id'], char))
+            yield from asyncio.sleep(0.3)
 
-    if not msg:
-        return u"갓 목록을 관리하여 줍니다. \n.갓 리스트, .갓 추가, .갓 삭제"
-    else:
-        msg = msg.split(" ", 1)
-        print(msg[0])
-        if msg[0] == u"리스트":
-            return u"****현재 갓 목록****\n" + " ".join(brain.rooms[room_id].god_list)
-        elif msg[0] == u"추가":
-            try:
-                brain.rooms[room_id].god_list.append(msg[1])
-                return u"{0} 님이 갓으로 추가되었습니다.".format(msg[1])
-            except:
-                return u"올바르지 않은 사용법입니다."
-        elif msg[0] == u"삭제":
-            try:
-                if msg[1] == "@All":
-                    brain.rooms[room_id].god_list = []
-                    return u"모두 지워졌습니다."
-
-                brain.rooms[room_id].god_list.remove(msg[1])
-                return u"{0} 님이 삭제되었습니다.".format(msg[1])
-            except:
-                return u"올바르지 않은 사용법입니다."
-        else:
-            return u"{0}은(는) 올바르지 않은 명령어입니다.".format(msg[0])
+    asyncio.async(printmsg(list(msg) + ['님', '!!!!']))

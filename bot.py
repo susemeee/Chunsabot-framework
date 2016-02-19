@@ -21,8 +21,8 @@ from chunsabot.database import Database
 from chunsabot.messages import Message, ContentType
 API_KEY = Database.load_config('telegram_api_key')
 
-ch = Chunsa(sync=True)
 loop = asyncio.get_event_loop()
+ch = Chunsa(sync=True)
 
 class ChunsabotEndPoint(telepot.async.Bot):
     debug = Database.load_config('debug_mode')
@@ -102,6 +102,9 @@ class ChunsabotEndPoint(telepot.async.Bot):
                 )
 
 bot = ChunsabotEndPoint(API_KEY)
+
+ch.write = bot.sendMessage
+
 loop.create_task(bot.messageLoop())
 print('Starting receive event loop.')
 
