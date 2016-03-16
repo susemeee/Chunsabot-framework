@@ -4,6 +4,7 @@ import random
 import re
 from chunsabot.botlogic import brain
 from chunsabot.chunsa import starttime
+from chunsabot.messages import PendingMessage
 
 # if msg.startswith(u"나가")
 @brain.route([u"나가", u"꺼져"])
@@ -100,10 +101,7 @@ def dice(msg, extras):
 
 @brain.route(re.compile("^갓([가-힣]|\w){1,20}$"))
 def p_god(msg, extra_msg, extras):
-    @asyncio.coroutine
-    def printmsg(li):
-        for char in li:
-            asyncio.async(brain.sockets.write(extras['room_id'], char))
-            yield from asyncio.sleep(0.3)
+    for char in list(msg) + ['님', '!!!!']:
+        brain.sockets.put_queue(PendingMessage(extras['room_id'], char, delay=0.3))
 
-    asyncio.async(printmsg(list(msg) + ['님', '!!!!']))
+    brain.sockets.process_queue()

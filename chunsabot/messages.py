@@ -42,3 +42,12 @@ class ResultMessage:
 
     def __repr__(self):
         return "<ResultMessage>\npeer : {0}\ncontent : {1}\nreply : {2}".format(self.peer, self.content, self.reply)
+
+class PendingMessage:
+    def __init__(self, room_id, content, delay=0):
+        self.room_id = room_id
+        self.content = content
+        self.delay = delay
+
+    def __repr__(self):
+        return "<PendingMessage> {}".format(self.content)

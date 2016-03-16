@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import time
 import os
+import asyncio
 from datetime import datetime
 
 from chunsabot.messages import Message, ResultMessage, ContentType
@@ -34,6 +35,8 @@ class Chunsa:
         #serves for research purposes.
         self.room_logger = Logger.altLogger()
 
+        # asyncio process queue flag
+        self.doing = False
 
         #'Shutdown' and 'Shutdown_socket' should be separated since some thread inside botlogic refers Chunsa.shutdown
         self.shutdown = False
@@ -79,6 +82,30 @@ class Chunsa:
             except Exception as e:
                 import traceback
                 traceback.print_exc()
+
+    def put_queue(self, pending_message):
+        self.msg_result_queue.put(pending_message)
+
+    def process_queue(self):
+        @asyncio.coroutine
+        def inner_process_queue(self):
+            if self.doing:
+                return
+            else:
+                print('start')
+                self.doing = True
+
+            @asyncio.coroutine
+            def individual_process(pending_msg):
+                asyncio.async(self.write(pending_msg.room_id, pending_msg.content))
+
+            while not self.msg_result_queue.empty():
+                pending_msg = self.msg_result_queue.get()
+                yield from asyncio.async(individual_process(pending_msg))
+                yield from asyncio.sleep(pending_msg.delay)
+            self.doing = False
+
+        asyncio.async(inner_process_queue(self))
 
     def remove_temp_dir(self):
         for the_file in os.listdir(Botlogic.__temppath__):
@@ -189,6 +216,10 @@ class Chunsa:
 
         if msg.datetime < self.init_time:
             self.logger.warning("Ignoring outdated messages")
+            return None
+        else:
+            # Processing possible queue
+            self.process_queue()
 
         if msg.attachment:
             attachment = True
